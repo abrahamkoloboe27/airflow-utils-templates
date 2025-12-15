@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Removed unused `packages.txt` reference from Dockerfile
 
-## [1.0.0] - 2024-12-15
+## [1.0.0] - 2024-01-15
 
 ### Added
 - Initial release of Airflow Alerts Templates
