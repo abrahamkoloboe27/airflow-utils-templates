@@ -1,0 +1,32 @@
+{
+    "cardsV2": [{
+        "cardId": "{{ dag_id }}_success_alert",
+        "card": {
+            "header": {
+                "title": "DAG: {{ dag_id }} {{ execution_date_short }}",
+                "subtitle": "Exécution réussie",
+                "imageUrl": "https://img.icons8.com/color/48/checkmark--v1.png"
+            },
+            "sections": [{
+                "widgets": [
+                    {"textParagraph": {"text": "<b>📅 Date d'exécution:</b> {{ execution_date }}"}},
+                    {"textParagraph": {"text": "<b>✅ Statut:</b> Succès"}},
+                    {"textParagraph": {"text": "<b>🔍 Tâche:</b> {{ task_id }}"}},
+                    {% if dag_description %}
+                    {"textParagraph": {"text": "<b>📝 Description:</b> {{ dag_description }}"}},
+                    {% endif %}
+                    {"textParagraph": {"text": "<b>🔢 Tentative:</b> {{ try_number }} sur {{ max_tries }}"}},
+                    {% if execution_time_str %}
+                    {"textParagraph": {"text": "<b>⏱️ Temps d'exécution:</b> {{ execution_time_str }}"}},
+                    {% endif %}
+                    {% if start_date %}
+                    {"textParagraph": {"text": "<b>🕒 Heure de départ:</b> {{ start_date }}"}},
+                    {% endif %}
+                    {% if end_date %}
+                    {"textParagraph": {"text": "<b>🕕 Heure de fin:</b> {{ end_date }}"}}
+                    {% endif %}
+                ]
+            }]
+        }
+    }]
+}

@@ -1,0 +1,36 @@
+{
+    "cardsV2": [{
+        "cardId": "{{ dag_id }}_retry_alert",
+        "card": {
+            "header": {
+                "title": "DAG: {{ dag_id }} {{ execution_date_short }}",
+                "subtitle": "Retentative {{ try_number }}/{{ max_tries }}",
+                "imageUrl": "https://img.icons8.com/color/48/synchronize--v1.png"
+            },
+            "sections": [{
+                "widgets": [
+                    {"textParagraph": {"text": "<b>📅 Date d'exécution:</b> {{ execution_date }}"}},
+                    {"textParagraph": {"text": "<b>🔄 Statut:</b> Retentative en cours"}},
+                    {"textParagraph": {"text": "<b>🔍 Tâche en retentative:</b> {{ task_id }}"}},
+                    {% if dag_description %}
+                    {"textParagraph": {"text": "<b>📝 Description:</b> {{ dag_description }}"}},
+                    {% endif %}
+                    {"textParagraph": {"text": "<b>🔢 Tentative:</b> {{ try_number }} sur {{ max_tries }}"}},
+                    {% if execution_time_str %}
+                    {"textParagraph": {"text": "<b>⏱️ Temps d'exécution jusqu'à présent:</b> {{ execution_time_str }}"}},
+                    {% endif %}
+                    {% if start_date %}
+                    {"textParagraph": {"text": "<b>🕒 Heure de départ:</b> {{ start_date }}"}},
+                    {% endif %}
+                    {% if failure_time %}
+                    {"textParagraph": {"text": "<b>🕕 Heure de l'échec:</b> {{ failure_time }}"}},
+                    {% endif %}
+                    {% if next_retry_datetime %}
+                    {"textParagraph": {"text": "<b>⏰ Prochaine tentative à:</b> {{ next_retry_datetime }}"}},
+                    {% endif %}
+                    {"textParagraph": {"text": "<b>⚠️ Erreur:</b> {{ exception_msg }}"}}
+                ]
+            }]
+        }
+    }]
+}
