@@ -47,8 +47,10 @@ services:
   airflow-scheduler : 
     << : *airflow-common
     depends_on :
-      - airflow-init
-      - postgres
+      airflow-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
     healthcheck :
       test : ["CMD-SHELL", "[ -f /opt/airflow/airflow-scheduler.pid ]"]
       interval : 10s
@@ -82,7 +84,8 @@ services:
     << : *airflow-common
     command : airflow db upgrade
     depends_on :
-      - postgres
+      postgres:
+        condition: service_healthy
     environment :
       << : *airflow-common-env
       _AIRFLOW_DB_MIGRATE : "true"
