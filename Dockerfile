@@ -22,7 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the alerts package and templates
 COPY alerts/ /opt/airflow/alerts/
 COPY templates/ /opt/airflow/templates/
-COPY setup.py README.md ./
+COPY setup.py README.md CHANGELOG.md ./
 
 # Install the package in editable mode
 RUN pip install --no-cache-dir -e .

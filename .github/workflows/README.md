@@ -85,3 +85,13 @@ To run tests locally:
 pip install -r requirements.txt -r requirements-dev.txt
 pytest tests/ -v
 ```
+
+## Release Process
+
+When creating a new release:
+
+1. Update the version in `setup.py`
+2. Update `CHANGELOG.md` with the new version and changes
+3. Commit the changes
+4. Create and push a git tag: `git tag -a v1.0.0 -m "Release v1.0.0" && git push origin v1.0.0`
+5. The CI workflow will automatically build and push the Docker image with version tags

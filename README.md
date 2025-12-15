@@ -305,6 +305,10 @@ Main API function that returns a dictionary of callbacks.
 
 MIT License - feel free to use in your projects.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes and releases.
+
 ## Support
 
 For detailed documentation, see [docs/usage.md](docs/usage.md).
