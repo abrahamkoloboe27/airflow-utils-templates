@@ -27,9 +27,10 @@ htmlcov
 *.swo
 *~
 
-# Documentation
-*.md
+# Documentation (keep README.md)
 docs/
+IMPLEMENTATION_SUMMARY.md
+MIGRATION_GUIDE.md
 
 # Logs
 logs/
