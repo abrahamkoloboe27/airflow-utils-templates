@@ -1,6 +1,15 @@
 """Tests for alerts API (get_callbacks)."""
 import pytest
-from unittest.mock import patch, Mock
+import sys
+from unittest.mock import patch, Mock, MagicMock as MockModule
+
+# Mock Airflow modules
+sys.modules['airflow'] = MockModule()
+sys.modules['airflow.utils'] = MockModule()
+sys.modules['airflow.utils.email'] = MockModule()
+sys.modules['airflow.models'] = MockModule()
+sys.modules['airflow.hooks'] = MockModule()
+sys.modules['airflow.hooks.base_hook'] = MockModule()
 
 
 def test_get_callbacks_default():
@@ -50,7 +59,7 @@ def test_get_callbacks_both_enabled(mock_context):
     assert all(cb is not None for cb in callbacks.values())
     
     # Test that callbacks can be called without error
-    with patch('alerts.email.send_email_smtp'), \
+    with patch('airflow.utils.email.send_email_smtp'), \
          patch('alerts.google_chat.requests.post'), \
          patch('alerts.google_chat._get_webhook_url', return_value='https://test.com'):
         
@@ -84,7 +93,7 @@ def test_get_callbacks_with_overrides(mock_context):
         success_message='Custom success message'
     )
     
-    with patch('alerts.email.send_email_smtp') as mock_send:
+    with patch('airflow.utils.email.send_email_smtp') as mock_send:
         callbacks['on_success_callback'](mock_context)
         
         # Verify overrides were used

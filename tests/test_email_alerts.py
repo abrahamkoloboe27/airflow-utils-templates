@@ -1,14 +1,23 @@
 """Tests for email alert module."""
 import pytest
-from unittest.mock import patch, Mock, MagicMock
+import sys
+from unittest.mock import patch, Mock, MagicMock, MagicMock as MockModule
 from datetime import datetime
+
+# Mock Airflow modules
+sys.modules['airflow'] = MockModule()
+sys.modules['airflow.utils'] = MockModule()
+sys.modules['airflow.utils.email'] = MockModule()
+sys.modules['airflow.models'] = MockModule()
+sys.modules['airflow.hooks'] = MockModule()
+sys.modules['airflow.hooks.base_hook'] = MockModule()
 
 
 def test_email_success_callback(mock_context):
     """Test email success callback sends email correctly."""
     from alerts.email import success_callback
     
-    with patch('alerts.email.send_email_smtp') as mock_send_email:
+    with patch('airflow.utils.email.send_email_smtp') as mock_send_email:
         success_callback(
             mock_context,
             email_recipients=['test@example.com'],
@@ -30,7 +39,7 @@ def test_email_retry_callback(mock_context):
     """Test email retry callback sends email correctly."""
     from alerts.email import retry_callback
     
-    with patch('alerts.email.send_email_smtp') as mock_send_email:
+    with patch('airflow.utils.email.send_email_smtp') as mock_send_email:
         retry_callback(
             mock_context,
             email_recipients=['test@example.com'],
@@ -51,7 +60,7 @@ def test_email_failure_callback(mock_context):
     """Test email failure callback sends email correctly."""
     from alerts.email import failure_callback
     
-    with patch('alerts.email.send_email_smtp') as mock_send_email:
+    with patch('airflow.utils.email.send_email_smtp') as mock_send_email:
         failure_callback(
             mock_context,
             email_recipients=['test@example.com'],
@@ -75,7 +84,12 @@ def test_email_callback_with_env_variable(mock_context, monkeypatch):
     monkeypatch.setenv('AIRFLOW_ALERT_EMAIL_RECIPIENTS', 'env@example.com,env2@example.com')
     monkeypatch.setenv('AIRFLOW_ALERT_CORPORATE_NAME', 'EnvCorp')
     
-    with patch('alerts.email.send_email_smtp') as mock_send_email:
+    # Mock Variable.get to return the default_var (which comes from environment)
+    def mock_variable_get(key, default_var=None):
+        return default_var
+    
+    with patch('airflow.utils.email.send_email_smtp') as mock_send_email, \
+         patch('airflow.models.Variable.get', side_effect=mock_variable_get):
         success_callback(mock_context)
         
         # Verify email was sent with env values
@@ -90,7 +104,7 @@ def test_email_callback_handles_error_gracefully(mock_context):
     """Test email callback handles errors without raising exceptions."""
     from alerts.email import success_callback
     
-    with patch('alerts.email.send_email_smtp', side_effect=Exception("SMTP Error")):
+    with patch('airflow.utils.email.send_email_smtp', side_effect=Exception("SMTP Error")):
         # Should not raise exception
         success_callback(
             mock_context,
@@ -118,7 +132,7 @@ def test_template_rendering_success(mock_context):
     """Test that success template renders correctly."""
     from alerts.email import success_callback
     
-    with patch('alerts.email.send_email_smtp') as mock_send_email:
+    with patch('airflow.utils.email.send_email_smtp') as mock_send_email:
         success_callback(
             mock_context,
             email_recipients=['test@example.com'],
@@ -137,7 +151,7 @@ def test_template_rendering_failure(mock_context):
     """Test that failure template renders correctly."""
     from alerts.email import failure_callback
     
-    with patch('alerts.email.send_email_smtp') as mock_send_email:
+    with patch('airflow.utils.email.send_email_smtp') as mock_send_email:
         failure_callback(
             mock_context,
             email_recipients=['test@example.com'],

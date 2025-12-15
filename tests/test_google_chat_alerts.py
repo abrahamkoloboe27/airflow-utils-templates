@@ -1,7 +1,13 @@
 """Tests for Google Chat alert module."""
 import pytest
+import sys
 import json
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock, MagicMock, MagicMock as MockModule
+
+# Mock Airflow modules
+sys.modules['airflow'] = MockModule()
+sys.modules['airflow.hooks'] = MockModule()
+sys.modules['airflow.hooks.base_hook'] = MockModule()
 
 
 def test_gchat_success_callback(mock_context):
@@ -111,7 +117,7 @@ def test_gchat_webhook_from_connection(mock_context):
     mock_connection.host = 'chat.googleapis.com/webhook/connection'
     
     with patch('alerts.google_chat.requests.post') as mock_post, \
-         patch('alerts.google_chat.BaseHook.get_connection', return_value=mock_connection):
+         patch('airflow.hooks.base_hook.BaseHook.get_connection', return_value=mock_connection):
         
         mock_response = Mock()
         mock_response.status_code = 200
