@@ -1,0 +1,31 @@
+<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+    <div style='background-color: #FF5252; padding: 30px 20px; border-radius: 5px 5px 0 0; text-align: center;'>
+        <h2 style='color: white; margin: 0; font-size: 24px; line-height: 1.4;'>
+            ⚠️ Échec Détecté | Failure Detected
+        </h2>
+    </div>
+    <div style='background-color: #ffffff; padding: 30px 25px; border-radius: 0 0 5px 5px; border: 1px solid #e9ecef; border-top: none;'>
+        <p style='color: #34495e; line-height: 1.6; margin: 0 0 20px 0;'>
+            <strong>DAG:</strong> {{ dag_id }}<br>
+            <strong>Task:</strong> {{ task_id }}<br>
+            <strong>Date d'exécution | Execution Date:</strong> {{ execution_date }}<br>
+            <strong>Tentative | Attempt:</strong> {{ try_number }} sur | of {{ max_tries }}<br>
+        </p>
+        <p style='color: #34495e; line-height: 1.6; margin: 0 0 20px 0;'>
+            <strong>Erreur | Error:</strong><br>
+            <code style='background: #f8f9fa; padding: 10px; display: block; margin-top: 10px; border-radius: 4px; word-wrap: break-word;'>
+                {{ exception }}
+            </code>
+        </p>
+        <p style='color: #34495e; line-height: 1.6; margin: 0;'>
+            Une intervention immédiate est requise pour résoudre ce problème.<br>
+            Immediate attention is required to resolve this issue.
+        </p>
+    </div>
+    <div style='text-align: center; margin-top: 25px; padding-top: 20px; border-top: 1px solid #e9ecef;'>
+        <p style='color: #7f8c8d; font-size: 12px; line-height: 1.4; margin: 0;'>
+            Ceci est un message automatique. | This is an automated message.<br>
+            © {{ corporate }} - {{ year }}
+        </p>
+    </div>
+</div>
