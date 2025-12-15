@@ -83,8 +83,8 @@ def _send_card(webhook_url: str, card_body: dict, thread_id: str) -> None:
     
     full_url = f"{webhook_url}{thread_ref}"
     
-    # Send request
-    response = requests.post(full_url, json=card_body)
+    # Send request with timeout to prevent indefinite hangs
+    response = requests.post(full_url, json=card_body, timeout=30)
     response.raise_for_status()
 
 
