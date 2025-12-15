@@ -1,5 +1,6 @@
 FROM quay.io/astronomer/astro-runtime:13.3.0
 
+# Install system packages
 USER root
 
 RUN apt-get update && \
@@ -13,3 +14,17 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 USER astro
+
+# Copy Python requirements and install
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the alerts package and templates
+COPY alerts/ /opt/airflow/alerts/
+COPY templates/ /opt/airflow/templates/
+COPY setup.py ./
+COPY README.md ./
+COPY CHANGELOG.md ./
+
+# Install the package in editable mode
+RUN pip install --no-cache-dir -e .
