@@ -1,5 +1,7 @@
 # Airflow Alerts Templates
 
+[![CI/CD Pipeline](https://github.com/abrahamkoloboe27/airflow-utils-templates/actions/workflows/ci.yml/badge.svg)](https://github.com/abrahamkoloboe27/airflow-utils-templates/actions/workflows/ci.yml)
+
 Modular and reusable Airflow alert system for email and Google Chat notifications. This package provides clean, production-ready templates and callbacks for DAG/task monitoring.
 
 ## Features
@@ -13,6 +15,8 @@ Modular and reusable Airflow alert system for email and Google Chat notification
 - 🚀 **Simple API**: One-line integration with `get_callbacks()`
 
 ## Installation
+
+### From Source
 
 ```bash
 # Clone the repository
@@ -29,6 +33,28 @@ Or install as a package:
 
 ```bash
 pip install -e .
+```
+
+### Using Docker
+
+Pull the pre-built Docker image from GitHub Container Registry:
+
+```bash
+# Latest version
+docker pull ghcr.io/abrahamkoloboe27/airflow-utils-templates:latest
+
+# Specific version
+docker pull ghcr.io/abrahamkoloboe27/airflow-utils-templates:v1.0.0
+```
+
+Or use docker-compose:
+
+```bash
+# Build and start services
+make build-up
+
+# Or manually
+docker compose up -d
 ```
 
 ## Quick Start
