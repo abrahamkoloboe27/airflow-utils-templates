@@ -155,7 +155,8 @@ def success_callback(
         logging.info(f"Success email sent for DAG {dag_id}")
         
     except Exception as e:
-        logging.error(f"Failed to send success email: {str(e)}")
+        # Log full exception with traceback to aid debugging (e.g., connection refused)
+        logging.exception(f"Failed to send success email: {str(e)}")
 
 
 def retry_callback(
@@ -216,7 +217,8 @@ def retry_callback(
         logging.info(f"Retry email sent for DAG {dag_id}")
         
     except Exception as e:
-        logging.error(f"Failed to send retry email: {str(e)}")
+        # Log full exception with traceback to aid debugging (e.g., connection refused)
+        logging.exception(f"Failed to send retry email: {str(e)}")
 
 
 def failure_callback(
@@ -275,7 +277,8 @@ def failure_callback(
         logging.info(f"Failure email sent for DAG {dag_id}")
         
     except Exception as e:
-        logging.error(f"Failed to send failure email: {str(e)}")
+        # Log full exception with traceback to aid debugging (e.g., connection refused)
+        logging.exception(f"Failed to send failure email: {str(e)}")
 
 
 __all__ = ['success_callback', 'retry_callback', 'failure_callback']

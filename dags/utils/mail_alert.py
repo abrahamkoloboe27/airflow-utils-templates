@@ -1,4 +1,4 @@
-
+from typing import Dict, Any
 def success_callback(context: Dict[str, Any], mails_list, corporate, message) -> None:
     """
     Callback function called when the DAG execution is successful.
