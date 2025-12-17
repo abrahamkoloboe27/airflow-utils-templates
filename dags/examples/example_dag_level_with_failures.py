@@ -84,10 +84,10 @@ from alerts import get_granular_callbacks
 callbacks = get_granular_callbacks(
     on_success=True,  # Send success alert with full summary
     on_failure=True,  # Send failure alert with detailed error info
-    on_retry=False,   # Don't send retry alerts (they'll be in final summary)
+    on_retry=True,   # Don't send retry alerts (they'll be in final summary)
     email_enabled=True,
     google_chat_enabled=True,
-    email_recipients=['ops-team@example.com'],
+    email_recipients=['abklb27@gmail.com'],
     corporate_name='My Company',
     alert_level='dag',  # DAG-level alerts with task summary
     logo_url='https://www.python.org/static/community_logos/python-logo-master-v3-TM.png'

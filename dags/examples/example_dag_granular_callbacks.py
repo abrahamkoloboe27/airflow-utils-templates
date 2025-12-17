@@ -18,12 +18,12 @@ from alerts import get_granular_callbacks
 
 # Example 1: Only send alerts on failure and retry (not on success)
 callbacks_errors_only = get_granular_callbacks(
-    on_success=False,
+    on_success=True,
     on_retry=True,
     on_failure=True,
     email_enabled=True,
-    google_chat_enabled=False,
-    email_recipients=['ops-team@example.com'],
+    google_chat_enabled=True,
+    email_recipients=['abklb27@gmail.com'],
     corporate_name='My Company',
     logo_url='https://www.python.org/static/community_logos/python-logo-master-v3-TM.png'
 )

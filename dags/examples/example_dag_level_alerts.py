@@ -66,7 +66,7 @@ def validate_data(**context):
 callbacks = get_callbacks(
     email_enabled=True,
     google_chat_enabled=True,
-    email_recipients=['team@example.com'],
+    email_recipients=['abklb27@gmail.com'],
     corporate_name='My Company',
     alert_level='dag',  # KEY: This enables DAG-level alerts instead of task-level
     logo_url='https://www.python.org/static/community_logos/python-logo-master-v3-TM.png'
