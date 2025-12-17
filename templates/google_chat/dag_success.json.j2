@@ -14,26 +14,18 @@
                         {"textParagraph": {"text": "<b>📅 Date d'exécution:</b> {{ execution_date }}"}},
                         {"textParagraph": {"text": "<b>🕒 Début | Start:</b> {{ start_date }}"}},
                         {"textParagraph": {"text": "<b>🕕 Fin | End:</b> {{ end_date }}"}},
-                        {"textParagraph": {"text": "<b>⏱️ Durée totale | Total Duration:</b> {{ execution_time_str }}"}},
-                        {% if dag_description %}
-                        {"textParagraph": {"text": "<b>📝 Description:</b> {{ dag_description }}"}}
-                        {% endif %}
+                        {"textParagraph": {"text": "<b>⏱️ Durée totale | Total Duration:</b> {{ execution_time_str }}"}}{% if dag_description %},
+                        {"textParagraph": {"text": "<b>📝 Description:</b> {{ dag_description }}"}}{% endif %}
                     ]
                 },
                 {
                     "header": "Statistiques des Tâches | Task Statistics",
                     "widgets": [
                         {"textParagraph": {"text": "<b>📊 Total des tâches:</b> {{ summary.total_tasks }}"}},
-                        {"textParagraph": {"text": "<b>✅ Succès:</b> <font color='#27ae60'>{{ summary.success_count }}</font>"}},
-                        {% if summary.failed_count > 0 %}
-                        {"textParagraph": {"text": "<b>❌ Échecs:</b> <font color='#e74c3c'>{{ summary.failed_count }}</font>"}},
-                        {% endif %}
-                        {% if summary.retry_count > 0 %}
-                        {"textParagraph": {"text": "<b>🔄 Retentatives:</b> <font color='#f39c12'>{{ summary.retry_count }}</font>"}},
-                        {% endif %}
-                        {% if summary.skipped_count > 0 %}
-                        {"textParagraph": {"text": "<b>⏭️ Ignorées:</b> {{ summary.skipped_count }}"}}
-                        {% endif %}
+                        {"textParagraph": {"text": "<b>✅ Succès:</b> <font color='#27ae60'>{{ summary.success_count }}</font>"}}{% if summary.failed_count > 0 %},
+                        {"textParagraph": {"text": "<b>❌ Échecs:</b> <font color='#e74c3c'>{{ summary.failed_count }}</font>"}}{% endif %}{% if summary.retry_count > 0 %},
+                        {"textParagraph": {"text": "<b>🔄 Retentatives:</b> <font color='#f39c12'>{{ summary.retry_count }}</font>"}}{% endif %}{% if summary.skipped_count > 0 %},
+                        {"textParagraph": {"text": "<b>⏭️ Ignorées:</b> {{ summary.skipped_count }}"}}{% endif %}
                     ]
                 },
                 {
