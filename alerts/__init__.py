@@ -11,6 +11,9 @@ def get_callbacks(
     email_recipients: Optional[list] = None,
     corporate_name: Optional[str] = None,
     success_message: Optional[str] = None,
+    logo_url: Optional[str] = None,
+    smtp_connection_id: Optional[str] = None,
+    gchat_connection_id: Optional[str] = None,
     **overrides
 ) -> Dict[str, Optional[Callable]]:
     """
@@ -25,6 +28,9 @@ def get_callbacks(
         email_recipients: List of email addresses (overrides Airflow Variable)
         corporate_name: Corporate name for email footer (overrides Airflow Variable)
         success_message: Custom success message for email
+        logo_url: URL of logo/image to display in alerts (optional)
+        smtp_connection_id: Airflow connection ID for SMTP (optional)
+        gchat_connection_id: Airflow connection ID for Google Chat (optional)
         **overrides: Additional override parameters for callbacks
         
     Returns:
@@ -36,7 +42,10 @@ def get_callbacks(
         default_args = {
             'owner': 'airflow',
             'retries': 2,
-            **get_callbacks(email_recipients=['team@example.com'])
+            **get_callbacks(
+                email_recipients=['team@example.com'],
+                logo_url='https://example.com/logo.png'
+            )
         }
     """
     callbacks = {
@@ -57,18 +66,24 @@ def get_callbacks(
             email_recipients=email_recipients,
             corporate_name=corporate_name,
             success_message=success_message,
+            logo_url=logo_url,
+            smtp_connection_id=smtp_connection_id,
             **overrides
         )
         callbacks['on_retry_callback'] = lambda context: email_retry(
             context,
             email_recipients=email_recipients,
             corporate_name=corporate_name,
+            logo_url=logo_url,
+            smtp_connection_id=smtp_connection_id,
             **overrides
         )
         callbacks['on_failure_callback'] = lambda context: email_failure(
             context,
             email_recipients=email_recipients,
             corporate_name=corporate_name,
+            logo_url=logo_url,
+            smtp_connection_id=smtp_connection_id,
             **overrides
         )
     
@@ -84,20 +99,161 @@ def get_callbacks(
             original_failure = callbacks['on_failure_callback']
             
             callbacks['on_success_callback'] = lambda context: (
-                original_success(context), gchat_success(context, **overrides)
+                original_success(context), gchat_success(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
             )
             callbacks['on_retry_callback'] = lambda context: (
-                original_retry(context), gchat_retry(context, **overrides)
+                original_retry(context), gchat_retry(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
             )
             callbacks['on_failure_callback'] = lambda context: (
-                original_failure(context), gchat_failure(context, **overrides)
+                original_failure(context), gchat_failure(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
             )
         else:
-            callbacks['on_success_callback'] = lambda context: gchat_success(context, **overrides)
-            callbacks['on_retry_callback'] = lambda context: gchat_retry(context, **overrides)
-            callbacks['on_failure_callback'] = lambda context: gchat_failure(context, **overrides)
+            callbacks['on_success_callback'] = lambda context: gchat_success(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
+            callbacks['on_retry_callback'] = lambda context: gchat_retry(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
+            callbacks['on_failure_callback'] = lambda context: gchat_failure(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
     
     return callbacks
 
 
-__all__ = ['get_callbacks']
+def get_granular_callbacks(
+    on_success: bool = False,
+    on_retry: bool = False,
+    on_failure: bool = False,
+    email_enabled: bool = True,
+    google_chat_enabled: bool = True,
+    email_recipients: Optional[list] = None,
+    corporate_name: Optional[str] = None,
+    success_message: Optional[str] = None,
+    logo_url: Optional[str] = None,
+    smtp_connection_id: Optional[str] = None,
+    gchat_connection_id: Optional[str] = None,
+    **overrides
+) -> Dict[str, Optional[Callable]]:
+    """
+    Get a dictionary of callback functions with granular control over which events trigger alerts.
+    
+    This function allows you to specify exactly which events (success, retry, failure) should 
+    trigger email and/or Google Chat notifications. By default, no callbacks are enabled unless
+    explicitly specified.
+    
+    Args:
+        on_success: Enable callbacks for successful task completion (default: False)
+        on_retry: Enable callbacks for task retries (default: False)
+        on_failure: Enable callbacks for task failures (default: False)
+        email_enabled: Enable email notifications for selected events (default: True)
+        google_chat_enabled: Enable Google Chat notifications for selected events (default: True)
+        email_recipients: List of email addresses (overrides Airflow Variable)
+        corporate_name: Corporate name for email footer (overrides Airflow Variable)
+        success_message: Custom success message for email
+        logo_url: URL of logo/image to display in alerts (optional)
+        smtp_connection_id: Airflow connection ID for SMTP (optional)
+        gchat_connection_id: Airflow connection ID for Google Chat (optional)
+        **overrides: Additional override parameters for callbacks
+        
+    Returns:
+        Dict with keys: on_success_callback, on_retry_callback, on_failure_callback
+        
+    Example:
+        from alerts import get_granular_callbacks
+        
+        # Only send alerts on failure and retry
+        default_args = {
+            'owner': 'airflow',
+            'retries': 2,
+            **get_granular_callbacks(
+                on_failure=True,
+                on_retry=True,
+                email_recipients=['team@example.com'],
+                logo_url='https://example.com/logo.png'
+            )
+        }
+        
+        # Only send alerts on success, email only
+        default_args = {
+            'owner': 'airflow',
+            **get_granular_callbacks(
+                on_success=True,
+                email_enabled=True,
+                google_chat_enabled=False,
+                email_recipients=['team@example.com']
+            )
+        }
+    """
+    callbacks = {
+        'on_success_callback': None,
+        'on_retry_callback': None,
+        'on_failure_callback': None,
+    }
+    
+    # Build callback functions based on granular selections
+    def _build_callback(event_type: str):
+        """Helper to build chained callback for a specific event type."""
+        event_callback = None
+        
+        if email_enabled:
+            if event_type == 'success':
+                from alerts.email import success_callback as email_success
+                event_callback = lambda context: email_success(
+                    context,
+                    email_recipients=email_recipients,
+                    corporate_name=corporate_name,
+                    success_message=success_message,
+                    logo_url=logo_url,
+                    smtp_connection_id=smtp_connection_id,
+                    **overrides
+                )
+            elif event_type == 'retry':
+                from alerts.email import retry_callback as email_retry
+                event_callback = lambda context: email_retry(
+                    context,
+                    email_recipients=email_recipients,
+                    corporate_name=corporate_name,
+                    logo_url=logo_url,
+                    smtp_connection_id=smtp_connection_id,
+                    **overrides
+                )
+            elif event_type == 'failure':
+                from alerts.email import failure_callback as email_failure
+                event_callback = lambda context: email_failure(
+                    context,
+                    email_recipients=email_recipients,
+                    corporate_name=corporate_name,
+                    logo_url=logo_url,
+                    smtp_connection_id=smtp_connection_id,
+                    **overrides
+                )
+        
+        if google_chat_enabled:
+            if event_type == 'success':
+                from alerts.google_chat import success_callback as gchat_success
+                gchat_cb = lambda context: gchat_success(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
+            elif event_type == 'retry':
+                from alerts.google_chat import retry_callback as gchat_retry
+                gchat_cb = lambda context: gchat_retry(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
+            elif event_type == 'failure':
+                from alerts.google_chat import failure_callback as gchat_failure
+                gchat_cb = lambda context: gchat_failure(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
+            
+            # Chain with email if both are enabled
+            if event_callback:
+                original_callback = event_callback
+                event_callback = lambda context: (original_callback(context), gchat_cb(context))
+            else:
+                event_callback = gchat_cb
+        
+        return event_callback
+    
+    # Only create callbacks for selected events
+    if on_success:
+        callbacks['on_success_callback'] = _build_callback('success')
+    
+    if on_retry:
+        callbacks['on_retry_callback'] = _build_callback('retry')
+    
+    if on_failure:
+        callbacks['on_failure_callback'] = _build_callback('failure')
+    
+    return callbacks
+
+
+__all__ = ['get_callbacks', 'get_granular_callbacks']
