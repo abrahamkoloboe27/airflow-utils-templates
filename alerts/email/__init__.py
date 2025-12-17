@@ -26,7 +26,8 @@ def _get_jinja_env():
 def _get_config(
     context: Dict[str, Any],
     email_recipients: Optional[List[str]] = None,
-    corporate_name: Optional[str] = None
+    corporate_name: Optional[str] = None,
+    logo_url: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Get configuration from Airflow Variables, environment, or parameters.
@@ -73,6 +74,18 @@ def _get_config(
         except Exception:
             pass
     
+    # Get logo URL
+    if logo_url:
+        config['logo_url'] = logo_url
+    else:
+        config['logo_url'] = os.environ.get('AIRFLOW_ALERT_LOGO_URL')
+        if not config['logo_url']:
+            try:
+                from airflow.models import Variable
+                config['logo_url'] = Variable.get('alert_logo_url', default_var=None)
+            except Exception:
+                pass
+    
     return config
 
 
@@ -102,6 +115,8 @@ def success_callback(
     email_recipients: Optional[List[str]] = None,
     corporate_name: Optional[str] = None,
     success_message: Optional[str] = None,
+    logo_url: Optional[str] = None,
+    smtp_connection_id: Optional[str] = None,
     **kwargs
 ) -> None:
     """
@@ -112,12 +127,14 @@ def success_callback(
         email_recipients: List of email addresses (optional)
         corporate_name: Corporate name for footer (optional)
         success_message: Custom success message (optional)
+        logo_url: URL of logo/image to display at top of email (optional)
+        smtp_connection_id: Airflow connection ID for SMTP (optional, defaults to 'smtp_default')
         **kwargs: Additional template variables
     """
     try:
         from airflow.utils.email import send_email_smtp
         
-        config = _get_config(context, email_recipients, corporate_name)
+        config = _get_config(context, email_recipients, corporate_name, logo_url)
         
         # Extract context data
         dag_id = context['dag'].dag_id
@@ -136,6 +153,7 @@ def success_callback(
             'execution_time': _format_execution_time(start_date, end_date),
             'message': success_message or '',
             'corporate': config['corporate_name'],
+            'logo_url': config.get('logo_url'),
             'year': datetime.now().year,
             **kwargs
         }
@@ -145,12 +163,16 @@ def success_callback(
         template = env.get_template('success.html')
         html_content = template.render(**template_vars)
         
-        # Send email
-        send_email_smtp(
-            to=config['email_recipients'],
-            subject=f"{config['corporate_name']} DAG {dag_id} - Exécution Réussie",
-            html_content=html_content
-        )
+        # Send email with optional custom connection
+        send_kwargs = {
+            'to': config['email_recipients'],
+            'subject': f"{config['corporate_name']} DAG {dag_id} - Exécution Réussie",
+            'html_content': html_content
+        }
+        if smtp_connection_id:
+            send_kwargs['conn_id'] = smtp_connection_id
+        
+        send_email_smtp(**send_kwargs)
         
         logging.info(f"Success email sent for DAG {dag_id}")
         
@@ -163,6 +185,8 @@ def retry_callback(
     context: Dict[str, Any],
     email_recipients: Optional[List[str]] = None,
     corporate_name: Optional[str] = None,
+    logo_url: Optional[str] = None,
+    smtp_connection_id: Optional[str] = None,
     **kwargs
 ) -> None:
     """
@@ -172,12 +196,14 @@ def retry_callback(
         context: Airflow task context
         email_recipients: List of email addresses (optional)
         corporate_name: Corporate name for footer (optional)
+        logo_url: URL of logo/image to display at top of email (optional)
+        smtp_connection_id: Airflow connection ID for SMTP (optional, defaults to 'smtp_default')
         **kwargs: Additional template variables
     """
     try:
         from airflow.utils.email import send_email_smtp
         
-        config = _get_config(context, email_recipients, corporate_name)
+        config = _get_config(context, email_recipients, corporate_name, logo_url)
         
         # Extract context data
         dag_id = context['dag'].dag_id
@@ -198,6 +224,7 @@ def retry_callback(
             'max_tries': max_tries,
             'next_retry_datetime': next_retry_datetime.strftime('%Y-%m-%d %H:%M:%S') if next_retry_datetime else None,
             'corporate': config['corporate_name'],
+            'logo_url': config.get('logo_url'),
             'year': datetime.now().year,
             **kwargs
         }
@@ -207,12 +234,16 @@ def retry_callback(
         template = env.get_template('retry.html')
         html_content = template.render(**template_vars)
         
-        # Send email
-        send_email_smtp(
-            to=config['email_recipients'],
-            subject=f"{config['corporate_name']} DAG {dag_id} - Retentative {try_number}/{max_tries}",
-            html_content=html_content
-        )
+        # Send email with optional custom connection
+        send_kwargs = {
+            'to': config['email_recipients'],
+            'subject': f"{config['corporate_name']} DAG {dag_id} - Retentative {try_number}/{max_tries}",
+            'html_content': html_content
+        }
+        if smtp_connection_id:
+            send_kwargs['conn_id'] = smtp_connection_id
+        
+        send_email_smtp(**send_kwargs)
         
         logging.info(f"Retry email sent for DAG {dag_id}")
         
@@ -225,6 +256,8 @@ def failure_callback(
     context: Dict[str, Any],
     email_recipients: Optional[List[str]] = None,
     corporate_name: Optional[str] = None,
+    logo_url: Optional[str] = None,
+    smtp_connection_id: Optional[str] = None,
     **kwargs
 ) -> None:
     """
@@ -234,12 +267,14 @@ def failure_callback(
         context: Airflow task context
         email_recipients: List of email addresses (optional)
         corporate_name: Corporate name for footer (optional)
+        logo_url: URL of logo/image to display at top of email (optional)
+        smtp_connection_id: Airflow connection ID for SMTP (optional, defaults to 'smtp_default')
         **kwargs: Additional template variables
     """
     try:
         from airflow.utils.email import send_email_smtp
         
-        config = _get_config(context, email_recipients, corporate_name)
+        config = _get_config(context, email_recipients, corporate_name, logo_url)
         
         # Extract context data
         dag_id = context['dag'].dag_id
@@ -258,6 +293,7 @@ def failure_callback(
             'try_number': try_number,
             'max_tries': max_tries,
             'corporate': config['corporate_name'],
+            'logo_url': config.get('logo_url'),
             'year': datetime.now().year,
             **kwargs
         }
@@ -267,12 +303,16 @@ def failure_callback(
         template = env.get_template('failure.html')
         html_content = template.render(**template_vars)
         
-        # Send email
-        send_email_smtp(
-            to=config['email_recipients'],
-            subject=f"{config['corporate_name']} DAG {dag_id} - Échec Critique ⚠️",
-            html_content=html_content
-        )
+        # Send email with optional custom connection
+        send_kwargs = {
+            'to': config['email_recipients'],
+            'subject': f"{config['corporate_name']} DAG {dag_id} - Échec Critique ⚠️",
+            'html_content': html_content
+        }
+        if smtp_connection_id:
+            send_kwargs['conn_id'] = smtp_connection_id
+        
+        send_email_smtp(**send_kwargs)
         
         logging.info(f"Failure email sent for DAG {dag_id}")
         

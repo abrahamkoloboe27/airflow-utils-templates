@@ -91,6 +91,7 @@ def _send_card(webhook_url: str, card_body: dict, thread_id: str) -> None:
 def success_callback(
     context: Dict[str, Any],
     connection_name: Optional[str] = None,
+    logo_url: Optional[str] = None,
     **kwargs
 ) -> None:
     """
@@ -99,6 +100,7 @@ def success_callback(
     Args:
         context: Airflow task context
         connection_name: Name of Airflow connection (optional)
+        logo_url: URL of logo/image to display in card header (optional)
         **kwargs: Additional template variables
     """
     try:
@@ -128,6 +130,7 @@ def success_callback(
             'try_number': try_number,
             'max_tries': max_tries,
             'dag_description': dag_description,
+            'logo_url': logo_url,
             **kwargs
         }
         
@@ -152,6 +155,7 @@ def success_callback(
 def retry_callback(
     context: Dict[str, Any],
     connection_name: Optional[str] = None,
+    logo_url: Optional[str] = None,
     **kwargs
 ) -> None:
     """
@@ -160,6 +164,7 @@ def retry_callback(
     Args:
         context: Airflow task context
         connection_name: Name of Airflow connection (optional)
+        logo_url: URL of logo/image to display in card header (optional)
         **kwargs: Additional template variables
     """
     try:
@@ -205,6 +210,7 @@ def retry_callback(
             'next_retry_datetime': next_retry_datetime.strftime('%H:%M:%S') if next_retry_datetime else None,
             'exception_msg': exception_msg,
             'dag_description': dag_description,
+            'logo_url': logo_url,
             **kwargs
         }
         
@@ -229,6 +235,7 @@ def retry_callback(
 def failure_callback(
     context: Dict[str, Any],
     connection_name: Optional[str] = None,
+    logo_url: Optional[str] = None,
     **kwargs
 ) -> None:
     """
@@ -237,6 +244,7 @@ def failure_callback(
     Args:
         context: Airflow task context
         connection_name: Name of Airflow connection (optional)
+        logo_url: URL of logo/image to display in card header (optional)
         **kwargs: Additional template variables
     """
     try:
@@ -280,6 +288,7 @@ def failure_callback(
             'max_tries': max_tries,
             'exception_msg': exception_msg,
             'dag_description': dag_description,
+            'logo_url': logo_url,
             **kwargs
         }
         

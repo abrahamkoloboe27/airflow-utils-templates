@@ -9,7 +9,10 @@ Modular and reusable Airflow alert system for email and Google Chat notification
 - 🎯 **Modular Design**: Separate packages for email and Google Chat alerts
 - 📧 **Email Notifications**: Beautiful HTML templates for success, retry, and failure alerts
 - 💬 **Google Chat Integration**: Rich card notifications with threading support
+- 🖼️ **Custom Logos**: Optional logo/image support in email and Google Chat alerts
+- 🎛️ **Granular Control**: Choose exactly which events (success/retry/failure) trigger alerts
 - 🔧 **Easy Configuration**: Via Airflow Variables, environment variables, or function parameters
+- 🔌 **Multi-Connection Support**: Use different SMTP/GChat connections per DAG
 - 🎨 **Customizable Templates**: Jinja2 templates easily overridable
 - ✅ **Production Ready**: Tested, documented, and following best practices
 - 🚀 **Simple API**: One-line integration with `get_callbacks()`
@@ -100,6 +103,95 @@ my_task = PythonOperator(
     on_failure_callback=failure_callback,
 )
 ```
+
+### Custom Logo/Image Support
+
+Add a custom logo or corporate image to your alert templates (optional):
+
+```python
+from alerts import get_callbacks
+
+callbacks = get_callbacks(
+    email_enabled=True,
+    google_chat_enabled=True,
+    email_recipients=['team@example.com'],
+    corporate_name='My Company',
+    logo_url='https://example.com/logo.png'  # Optional logo URL
+)
+```
+
+The logo will appear at the top of email alerts and in the header of Google Chat cards. If not provided, alerts will display without a logo.
+
+You can also configure the logo via environment variable or Airflow Variable:
+
+```bash
+# Via Environment Variable
+export AIRFLOW_ALERT_LOGO_URL="https://example.com/logo.png"
+
+# Via Airflow Variable
+airflow variables set alert_logo_url "https://example.com/logo.png"
+```
+
+### Granular Callback Control
+
+Use `get_granular_callbacks()` to specify exactly which events trigger alerts:
+
+```python
+from alerts import get_granular_callbacks
+
+# Example 1: Only send alerts on failures and retries (not on success)
+callbacks = get_granular_callbacks(
+    on_success=False,
+    on_retry=True,
+    on_failure=True,
+    email_enabled=True,
+    google_chat_enabled=False,
+    email_recipients=['ops@example.com']
+)
+
+# Example 2: Only send alerts on final failure (no retry or success alerts)
+callbacks = get_granular_callbacks(
+    on_success=False,
+    on_retry=False,
+    on_failure=True,
+    email_enabled=True,
+    email_recipients=['critical@example.com']
+)
+
+# Example 3: All events enabled (same as get_callbacks with all defaults)
+callbacks = get_granular_callbacks(
+    on_success=True,
+    on_retry=True,
+    on_failure=True,
+    email_enabled=True
+)
+```
+
+This is useful for:
+- **Critical pipelines**: Only alert on final failures, not retries
+- **High-volume DAGs**: Reduce alert noise by skipping success notifications
+- **Different alert recipients**: Send retry alerts to ops team, failures to management
+
+### Custom SMTP and Google Chat Connections
+
+Specify custom Airflow connections for sending alerts:
+
+```python
+from alerts import get_callbacks
+
+callbacks = get_callbacks(
+    email_enabled=True,
+    google_chat_enabled=True,
+    smtp_connection_id='custom_smtp',      # Use specific SMTP connection
+    gchat_connection_id='custom_gchat',    # Use specific GChat connection
+    email_recipients=['team@example.com']
+)
+```
+
+This allows you to:
+- Use different SMTP servers for different DAGs
+- Route alerts to different Google Chat spaces
+- Support multi-tenant deployments with separate notification channels
 
 ## Configuration
 
@@ -192,8 +284,18 @@ airflow-utils-templates/
 
 See the `dags/examples/` directory for complete working examples:
 
+### Basic Examples
 - **example_dag_success.py**: ETL pipeline with successful execution
 - **example_dag_failure.py**: Pipeline with simulated failures and retries
+
+### New Feature Examples
+- **example_dag_with_logo.py**: Demonstrates custom logo/image in alert templates
+- **example_dag_granular_callbacks.py**: Shows granular control over which events trigger alerts
+- **example_dag_all_features.py**: Comprehensive example combining all new features:
+  - Logo support in alerts
+  - Granular callback control (success/retry/failure)
+  - Custom SMTP and Google Chat connections
+  - Multiple DAGs with different configurations
 
 Run examples:
 ```bash
@@ -201,8 +303,10 @@ Run examples:
 cp dags/examples/*.py $AIRFLOW_HOME/dags/
 
 # Trigger manually
-airflow dags trigger example_etl_success
-airflow dags trigger example_etl_with_retries
+airflow dags trigger example_dag_success
+airflow dags trigger example_dag_with_logo
+airflow dags trigger example_dag_granular_callbacks
+airflow dags trigger example_dag_all_features
 ```
 
 ## Testing

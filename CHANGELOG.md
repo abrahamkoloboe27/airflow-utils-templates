@@ -17,14 +17,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automated linting with flake8 in CI pipeline
 - Test coverage reporting with pytest-cov
 - This CHANGELOG file to track project changes
+- Optional logo/image support in email and Google Chat alert templates
+- `logo_url` parameter for displaying custom branding in alerts
+- Logo configuration via function parameter, environment variable (`AIRFLOW_ALERT_LOGO_URL`), or Airflow Variable (`alert_logo_url`)
+- New `get_granular_callbacks()` function for fine-grained control over alert events
+- `on_success`, `on_retry`, and `on_failure` boolean flags for granular alert control
+- Custom SMTP connection support via `smtp_connection_id` parameter
+- Custom Google Chat connection support via `gchat_connection_id` parameter
+- Example DAG demonstrating logo usage (`example_dag_with_logo.py`)
+- Example DAG demonstrating granular callbacks (`example_dag_granular_callbacks.py`)
+- 10 new comprehensive tests for logo, granular callbacks, and custom connections
 
 ### Changed
 - Updated Dockerfile to properly copy project files and dependencies
 - Updated Dockerfile to include README.md in the container image
 - Improved flake8 configuration for better code quality checks
+- Enhanced `get_callbacks()` function to support logo_url, smtp_connection_id, and gchat_connection_id parameters
+- Updated email templates (success, retry, failure) to display optional logo at the top
+- Updated Google Chat templates to use optional logo in card headers
+- Improved lambda closures to use default parameters avoiding late-binding issues
 
 ### Fixed
 - Removed unused `packages.txt` reference from Dockerfile
+- Lambda variable binding issues in callback functions to prevent late-binding problems
 
 ## [1.0.0] - 2024-01-15
 
