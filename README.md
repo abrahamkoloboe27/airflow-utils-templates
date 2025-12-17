@@ -11,6 +11,7 @@ Modular and reusable Airflow alert system for email and Google Chat notification
 - 💬 **Google Chat Integration**: Rich card notifications with threading support
 - 🖼️ **Custom Logos**: Optional logo/image support in email and Google Chat alerts
 - 🎛️ **Granular Control**: Choose exactly which events (success/retry/failure) trigger alerts
+- 📊 **DAG-Level Alerts**: Send single summary alert per DAG with complete task metrics (NEW!)
 - 🔧 **Easy Configuration**: Via Airflow Variables, environment variables, or function parameters
 - 🔌 **Multi-Connection Support**: Use different SMTP/GChat connections per DAG
 - 🎨 **Customizable Templates**: Jinja2 templates easily overridable
@@ -172,6 +173,66 @@ This is useful for:
 - **High-volume DAGs**: Reduce alert noise by skipping success notifications
 - **Different alert recipients**: Send retry alerts to ops team, failures to management
 
+### DAG-Level Alerts (NEW!)
+
+Send **one summary alert per DAG** instead of individual alerts for each task. DAG-level alerts include:
+- Complete task execution statistics (success/failed/retry counts)
+- Detailed task table with durations and states
+- Failed task details with error messages
+- Overall DAG execution time
+
+```python
+from alerts import get_callbacks
+
+# DAG-level alerts: One alert at the end with complete summary
+callbacks = get_callbacks(
+    email_enabled=True,
+    google_chat_enabled=True,
+    email_recipients=['team@example.com'],
+    corporate_name='My Company',
+    alert_level='dag'  # KEY: Enables DAG-level alerts
+)
+
+# Use in DAG default_args
+default_args = {
+    'owner': 'airflow',
+    'start_date': datetime(2024, 1, 1),
+    'retries': 2,
+    **callbacks
+}
+
+with DAG('my_etl_pipeline', default_args=default_args, ...) as dag:
+    # Multiple tasks...
+    task1 >> task2 >> task3 >> task4
+    # Only ONE alert sent at the end with summary of all tasks
+```
+
+**DAG-level with Granular Control:**
+
+```python
+from alerts import get_granular_callbacks
+
+# Only alert on DAG failure (no success alerts)
+callbacks = get_granular_callbacks(
+    on_success=False,
+    on_failure=True,
+    alert_level='dag',  # DAG-level failure alert with all task details
+    email_recipients=['critical@example.com']
+)
+```
+
+**Benefits:**
+- **Reduced Alert Noise**: One email/message instead of N alerts for N tasks
+- **Better Overview**: See all task results in a single view
+- **Complete Context**: Failed tasks shown with all task states and durations
+- **Perfect for ETL/Data Pipelines**: Get full pipeline execution summary
+
+**When to use:**
+- ✅ ETL pipelines with many tasks
+- ✅ Daily/scheduled batch jobs where you want end-of-day summary
+- ✅ Production pipelines to reduce alert fatigue
+- ❌ Real-time monitoring where immediate task failure alerts are needed
+
 ### Custom SMTP and Google Chat Connections
 
 Specify custom Airflow connections for sending alerts:
@@ -291,6 +352,8 @@ See the `dags/examples/` directory for complete working examples:
 ### New Feature Examples
 - **example_dag_with_logo.py**: Demonstrates custom logo/image in alert templates
 - **example_dag_granular_callbacks.py**: Shows granular control over which events trigger alerts
+- **example_dag_level_alerts.py**: DAG-level alerts with complete task summary (NEW!)
+- **example_dag_level_with_failures.py**: DAG-level failure alerts with detailed error reporting (NEW!)
 - **example_dag_all_features.py**: Comprehensive example combining all new features:
   - Logo support in alerts
   - Granular callback control (success/retry/failure)
@@ -306,6 +369,8 @@ cp dags/examples/*.py $AIRFLOW_HOME/dags/
 airflow dags trigger example_dag_success
 airflow dags trigger example_dag_with_logo
 airflow dags trigger example_dag_granular_callbacks
+airflow dags trigger example_dag_level_alerts
+airflow dags trigger example_dag_level_with_failures
 airflow dags trigger example_dag_all_features
 ```
 
@@ -372,6 +437,32 @@ Main API function that returns a dictionary of callbacks.
 - `email_recipients` (list): List of email addresses
 - `corporate_name` (str): Corporate name for email footer
 - `success_message` (str): Custom success message for email
+- `logo_url` (str): URL of logo/image to display in alerts (optional)
+- `smtp_connection_id` (str): Airflow connection ID for SMTP (optional)
+- `gchat_connection_id` (str): Airflow connection ID for Google Chat (optional)
+- `alert_level` (str): Alert scope - "task" (default) or "dag" for DAG-level summary alerts
+- `**overrides`: Additional parameters passed to callbacks
+
+**Returns:**
+- Dict with keys: `on_success_callback`, `on_retry_callback`, `on_failure_callback`
+
+### `get_granular_callbacks(**kwargs)`
+
+Get callbacks with granular control over which events trigger alerts.
+
+**Parameters:**
+- `on_success` (bool): Enable callbacks for successful completion (default: False)
+- `on_retry` (bool): Enable callbacks for retries (default: False)
+- `on_failure` (bool): Enable callbacks for failures (default: False)
+- `email_enabled` (bool): Enable email notifications (default: True)
+- `google_chat_enabled` (bool): Enable Google Chat notifications (default: True)
+- `email_recipients` (list): List of email addresses
+- `corporate_name` (str): Corporate name for email footer
+- `success_message` (str): Custom success message for email
+- `logo_url` (str): URL of logo/image to display in alerts (optional)
+- `smtp_connection_id` (str): Airflow connection ID for SMTP (optional)
+- `gchat_connection_id` (str): Airflow connection ID for Google Chat (optional)
+- `alert_level` (str): Alert scope - "task" (default) or "dag" for DAG-level summary alerts
 - `**overrides`: Additional parameters passed to callbacks
 
 **Returns:**
@@ -379,15 +470,25 @@ Main API function that returns a dictionary of callbacks.
 
 ### Email Module Functions
 
-- `success_callback(context, **kwargs)`: Send success email
-- `retry_callback(context, **kwargs)`: Send retry email
-- `failure_callback(context, **kwargs)`: Send failure email
+**Task-Level Callbacks:**
+- `success_callback(context, **kwargs)`: Send success email for a task
+- `retry_callback(context, **kwargs)`: Send retry email for a task
+- `failure_callback(context, **kwargs)`: Send failure email for a task
+
+**DAG-Level Callbacks:**
+- `dag_success_callback(context, **kwargs)`: Send DAG completion email with task summary
+- `dag_failure_callback(context, **kwargs)`: Send DAG failure email with failed task details
 
 ### Google Chat Module Functions
 
-- `success_callback(context, **kwargs)`: Send success card
-- `retry_callback(context, **kwargs)`: Send retry card
-- `failure_callback(context, **kwargs)`: Send failure card
+**Task-Level Callbacks:**
+- `success_callback(context, **kwargs)`: Send success card for a task
+- `retry_callback(context, **kwargs)`: Send retry card for a task
+- `failure_callback(context, **kwargs)`: Send failure card for a task
+
+**DAG-Level Callbacks:**
+- `dag_success_callback(context, **kwargs)`: Send DAG completion card with task summary
+- `dag_failure_callback(context, **kwargs)`: Send DAG failure card with failed task details
 
 ## Requirements
 

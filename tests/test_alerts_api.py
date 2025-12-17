@@ -119,3 +119,110 @@ def test_callbacks_integration_in_dag_default_args():
     assert 'on_failure_callback' in default_args
     assert 'owner' in default_args
     assert 'retries' in default_args
+
+
+def test_get_callbacks_dag_level():
+    """Test get_callbacks with alert_level='dag'."""
+    from alerts import get_callbacks
+    
+    callbacks = get_callbacks(
+        email_enabled=True,
+        google_chat_enabled=False,
+        alert_level='dag'
+    )
+    
+    assert 'on_success_callback' in callbacks
+    assert 'on_retry_callback' in callbacks
+    assert 'on_failure_callback' in callbacks
+    # DAG-level alerts should have success and failure callbacks
+    assert callbacks['on_success_callback'] is not None
+    assert callbacks['on_failure_callback'] is not None
+    # But no retry callback for DAG-level
+    assert callbacks['on_retry_callback'] is None
+
+
+def test_get_callbacks_dag_level_both_channels():
+    """Test get_callbacks with alert_level='dag' and both channels."""
+    from alerts import get_callbacks
+    
+    callbacks = get_callbacks(
+        email_enabled=True,
+        google_chat_enabled=True,
+        alert_level='dag',
+        email_recipients=['team@example.com']
+    )
+    
+    assert callbacks['on_success_callback'] is not None
+    assert callbacks['on_failure_callback'] is not None
+    assert callbacks['on_retry_callback'] is None
+
+
+def test_get_callbacks_task_level_default():
+    """Test get_callbacks defaults to task-level alerts."""
+    from alerts import get_callbacks
+    
+    # Without alert_level, should default to task-level
+    callbacks = get_callbacks(
+        email_enabled=True,
+        google_chat_enabled=False
+    )
+    
+    # Task-level should have all three callbacks
+    assert callbacks['on_success_callback'] is not None
+    assert callbacks['on_retry_callback'] is not None
+    assert callbacks['on_failure_callback'] is not None
+
+
+def test_get_granular_callbacks_dag_level():
+    """Test get_granular_callbacks with alert_level='dag'."""
+    from alerts import get_granular_callbacks
+    
+    callbacks = get_granular_callbacks(
+        on_success=True,
+        on_failure=True,
+        on_retry=False,  # Not applicable for DAG-level (DAG-level doesn't support retry events)
+        email_enabled=True,
+        google_chat_enabled=False,
+        alert_level='dag'
+    )
+    
+    assert callbacks['on_success_callback'] is not None
+    assert callbacks['on_failure_callback'] is not None
+    # Retry should be None for DAG-level (retry events not supported for DAG-level alerts)
+    assert callbacks['on_retry_callback'] is None
+
+
+def test_get_granular_callbacks_dag_level_failure_only():
+    """Test get_granular_callbacks with DAG-level failure-only alerts."""
+    from alerts import get_granular_callbacks
+    
+    callbacks = get_granular_callbacks(
+        on_success=False,
+        on_failure=True,
+        email_enabled=True,
+        alert_level='dag',
+        email_recipients=['critical@example.com']
+    )
+    
+    assert callbacks['on_success_callback'] is None
+    assert callbacks['on_failure_callback'] is not None
+    assert callbacks['on_retry_callback'] is None
+
+
+def test_get_granular_callbacks_dag_level_ignores_retry():
+    """Test that on_retry=True is ignored for DAG-level alerts."""
+    from alerts import get_granular_callbacks
+    
+    # Even with on_retry=True, DAG-level should not create retry callback
+    callbacks = get_granular_callbacks(
+        on_success=True,
+        on_failure=True,
+        on_retry=True,  # Should be ignored for DAG-level
+        email_enabled=True,
+        alert_level='dag'
+    )
+    
+    assert callbacks['on_success_callback'] is not None
+    assert callbacks['on_failure_callback'] is not None
+    # Retry callback should be None for DAG-level, even when on_retry=True
+    assert callbacks['on_retry_callback'] is None

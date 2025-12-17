@@ -27,6 +27,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example DAG demonstrating logo usage (`example_dag_with_logo.py`)
 - Example DAG demonstrating granular callbacks (`example_dag_granular_callbacks.py`)
 - 10 new comprehensive tests for logo, granular callbacks, and custom connections
+- **DAG-level alerts feature**: New `alert_level` parameter to choose between task-level or DAG-level alerts
+- `dag_success_callback` and `dag_failure_callback` functions for email alerts with complete task summary
+- `dag_success_callback` and `dag_failure_callback` functions for Google Chat alerts with task metrics
+- New email templates: `dag_success.html` and `dag_failure.html` with task execution tables and statistics
+- New Google Chat templates: `dag_success.json.j2` and `dag_failure.json.j2` with collapsible task details
+- DAG-level alerts include comprehensive task metrics: success count, failure count, retry count, durations
+- Failed task details in DAG-level failure alerts with error messages and execution times
+- Example DAGs: `example_dag_level_alerts.py` and `example_dag_level_with_failures.py`
+- Support for DAG-level alerts in both `get_callbacks()` and `get_granular_callbacks()` functions
 
 ### Changed
 - Updated Dockerfile to properly copy project files and dependencies
