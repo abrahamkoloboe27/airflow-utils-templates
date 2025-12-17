@@ -193,51 +193,52 @@ def get_granular_callbacks(
         if email_enabled:
             if event_type == 'success':
                 from alerts.email import success_callback as email_success
-                event_callback = lambda context: email_success(
+                # Use default arguments to capture current values
+                event_callback = lambda context, cb=email_success, er=email_recipients, cn=corporate_name, sm=success_message, lu=logo_url, sc=smtp_connection_id, ov=overrides: cb(
                     context,
-                    email_recipients=email_recipients,
-                    corporate_name=corporate_name,
-                    success_message=success_message,
-                    logo_url=logo_url,
-                    smtp_connection_id=smtp_connection_id,
-                    **overrides
+                    email_recipients=er,
+                    corporate_name=cn,
+                    success_message=sm,
+                    logo_url=lu,
+                    smtp_connection_id=sc,
+                    **ov
                 )
             elif event_type == 'retry':
                 from alerts.email import retry_callback as email_retry
-                event_callback = lambda context: email_retry(
+                event_callback = lambda context, cb=email_retry, er=email_recipients, cn=corporate_name, lu=logo_url, sc=smtp_connection_id, ov=overrides: cb(
                     context,
-                    email_recipients=email_recipients,
-                    corporate_name=corporate_name,
-                    logo_url=logo_url,
-                    smtp_connection_id=smtp_connection_id,
-                    **overrides
+                    email_recipients=er,
+                    corporate_name=cn,
+                    logo_url=lu,
+                    smtp_connection_id=sc,
+                    **ov
                 )
             elif event_type == 'failure':
                 from alerts.email import failure_callback as email_failure
-                event_callback = lambda context: email_failure(
+                event_callback = lambda context, cb=email_failure, er=email_recipients, cn=corporate_name, lu=logo_url, sc=smtp_connection_id, ov=overrides: cb(
                     context,
-                    email_recipients=email_recipients,
-                    corporate_name=corporate_name,
-                    logo_url=logo_url,
-                    smtp_connection_id=smtp_connection_id,
-                    **overrides
+                    email_recipients=er,
+                    corporate_name=cn,
+                    logo_url=lu,
+                    smtp_connection_id=sc,
+                    **ov
                 )
         
         if google_chat_enabled:
             if event_type == 'success':
                 from alerts.google_chat import success_callback as gchat_success
-                gchat_cb = lambda context: gchat_success(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
+                gchat_cb = lambda context, cb=gchat_success, gc=gchat_connection_id, lu=logo_url, ov=overrides: cb(context, connection_name=gc, logo_url=lu, **ov)
             elif event_type == 'retry':
                 from alerts.google_chat import retry_callback as gchat_retry
-                gchat_cb = lambda context: gchat_retry(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
+                gchat_cb = lambda context, cb=gchat_retry, gc=gchat_connection_id, lu=logo_url, ov=overrides: cb(context, connection_name=gc, logo_url=lu, **ov)
             elif event_type == 'failure':
                 from alerts.google_chat import failure_callback as gchat_failure
-                gchat_cb = lambda context: gchat_failure(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
+                gchat_cb = lambda context, cb=gchat_failure, gc=gchat_connection_id, lu=logo_url, ov=overrides: cb(context, connection_name=gc, logo_url=lu, **ov)
             
             # Chain with email if both are enabled
             if event_callback:
                 original_callback = event_callback
-                event_callback = lambda context: (original_callback(context), gchat_cb(context))
+                event_callback = lambda context, oc=original_callback, gc=gchat_cb: (oc(context), gc(context))
             else:
                 event_callback = gchat_cb
         
