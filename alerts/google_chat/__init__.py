@@ -28,12 +28,12 @@ def _get_jinja_env():
 def _get_webhook_url(context: Dict[str, Any], connection_name: Optional[str] = None) -> str:
     """
     Get Google Chat webhook URL from Airflow connection or environment.
-    
+
     Priority: function parameter > environment variable > Airflow Connection
     """
     # Try environment variable
     webhook_url = os.environ.get('AIRFLOW_GCHAT_WEBHOOK_URL')
-    
+
     if not webhook_url:
         # Try Airflow Connection
         try:
@@ -44,11 +44,11 @@ def _get_webhook_url(context: Dict[str, Any], connection_name: Optional[str] = N
         except Exception as e:
             logging.error(f"Could not get Google Chat webhook URL: {e}")
             raise ValueError("Google Chat webhook URL not configured")
-    
+
     # Ensure URL has protocol
     if not webhook_url.startswith('http'):
         webhook_url = f"https://{webhook_url}"
-    
+
     return webhook_url
 
 
@@ -56,7 +56,7 @@ def _format_execution_time(start_date, end_date) -> str:
     """Format execution time as human-readable string."""
     if not start_date or not end_date:
         return "Non disponible"
-    
+
     # Handle timezone differences
     if hasattr(start_date, 'tzinfo') and start_date.tzinfo:
         if hasattr(end_date, 'tzinfo') and not end_date.tzinfo:
@@ -66,7 +66,7 @@ def _format_execution_time(start_date, end_date) -> str:
             start_date = start_date.replace(tzinfo=None)
         if hasattr(end_date, 'tzinfo') and end_date.tzinfo:
             end_date = end_date.replace(tzinfo=None)
-    
+
     execution_time = (end_date - start_date).total_seconds()
     hours, remainder = divmod(execution_time, 3600)
     minutes, seconds = divmod(remainder, 60)
@@ -80,9 +80,9 @@ def _send_card(webhook_url: str, card_body: dict, thread_id: str) -> None:
         thread_ref = f"?threadKey={thread_id}&messageReplyOption=REPLY_MESSAGE_FALLBACK_TO_NEW_THREAD"
     else:
         thread_ref = f"&threadKey={thread_id}&messageReplyOption=REPLY_MESSAGE_FALLBACK_TO_NEW_THREAD"
-    
+
     full_url = f"{webhook_url}{thread_ref}"
-    
+
     # Send request with timeout to prevent indefinite hangs
     response = requests.post(full_url, json=card_body, timeout=30)
     response.raise_for_status()
@@ -96,7 +96,7 @@ def success_callback(
 ) -> None:
     """
     Send success Google Chat notification.
-    
+
     Args:
         context: Airflow task context
         connection_name: Name of Airflow connection (optional)
@@ -105,7 +105,7 @@ def success_callback(
     """
     try:
         webhook_url = _get_webhook_url(context, connection_name)
-        
+
         # Extract context data
         dag_id = context['dag'].dag_id
         task_id = context['task_instance'].task_id
@@ -117,7 +117,7 @@ def success_callback(
         try_number = context['task_instance'].try_number
         max_tries = context['task'].retries + 1
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
-        
+
         # Prepare template variables
         template_vars = {
             'dag_id': dag_id,
@@ -133,21 +133,21 @@ def success_callback(
             'logo_url': logo_url,
             **kwargs
         }
-        
+
         # Render template
         env = _get_jinja_env()
         template = env.get_template('success.json.j2')
         card_json = template.render(**template_vars)
         card_body = json.loads(card_json)
-        
+
         # Create thread ID
         thread_id = f"{dag_id}_{execution_date.strftime('%Y%m%d')}"
-        
+
         # Send card
         _send_card(webhook_url, card_body, thread_id)
-        
+
         logging.info(f"Success Google Chat alert sent for DAG {dag_id}")
-        
+
     except Exception as e:
         logging.error(f"Failed to send Google Chat success alert: {str(e)}")
 
@@ -160,7 +160,7 @@ def retry_callback(
 ) -> None:
     """
     Send retry Google Chat notification.
-    
+
     Args:
         context: Airflow task context
         connection_name: Name of Airflow connection (optional)
@@ -169,7 +169,7 @@ def retry_callback(
     """
     try:
         webhook_url = _get_webhook_url(context, connection_name)
-        
+
         # Extract context data
         dag_id = context['dag'].dag_id
         task_id = context['task_instance'].task_id
@@ -182,7 +182,7 @@ def retry_callback(
         max_tries = context['task'].retries + 1
         next_retry_datetime = context.get('next_retry_datetime')
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
-        
+
         # Handle timezone for current time
         if start_date and hasattr(start_date, 'tzinfo') and start_date.tzinfo:
             current_time = datetime.now(start_date.tzinfo)
@@ -190,12 +190,12 @@ def retry_callback(
             current_time = datetime.now()
             if start_date and hasattr(start_date, 'tzinfo') and start_date.tzinfo:
                 start_date = start_date.replace(tzinfo=None)
-        
+
         # Format exception message
         exception_msg = str(exception)
         if len(exception_msg) > 500:
             exception_msg = exception_msg[:497] + "..."
-        
+
         # Prepare template variables
         template_vars = {
             'dag_id': dag_id,
@@ -213,21 +213,21 @@ def retry_callback(
             'logo_url': logo_url,
             **kwargs
         }
-        
+
         # Render template
         env = _get_jinja_env()
         template = env.get_template('retry.json.j2')
         card_json = template.render(**template_vars)
         card_body = json.loads(card_json)
-        
+
         # Create thread ID
         thread_id = f"{dag_id}_{execution_date.strftime('%Y%m%d')}"
-        
+
         # Send card
         _send_card(webhook_url, card_body, thread_id)
-        
+
         logging.info(f"Retry Google Chat alert sent for DAG {dag_id}")
-        
+
     except Exception as e:
         logging.error(f"Failed to send Google Chat retry alert: {str(e)}")
 
@@ -240,7 +240,7 @@ def failure_callback(
 ) -> None:
     """
     Send failure Google Chat notification.
-    
+
     Args:
         context: Airflow task context
         connection_name: Name of Airflow connection (optional)
@@ -249,7 +249,7 @@ def failure_callback(
     """
     try:
         webhook_url = _get_webhook_url(context, connection_name)
-        
+
         # Extract context data
         dag_id = context['dag'].dag_id
         task_id = context['task_instance'].task_id
@@ -261,7 +261,7 @@ def failure_callback(
         try_number = context['task_instance'].try_number
         max_tries = context['task'].retries + 1
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
-        
+
         # Handle timezone for current time
         if start_date and hasattr(start_date, 'tzinfo') and start_date.tzinfo:
             current_time = datetime.now(start_date.tzinfo)
@@ -269,12 +269,12 @@ def failure_callback(
             current_time = datetime.now()
             if start_date and hasattr(start_date, 'tzinfo') and start_date.tzinfo:
                 start_date = start_date.replace(tzinfo=None)
-        
+
         # Format exception message
         exception_msg = str(exception)
         if len(exception_msg) > 500:
             exception_msg = exception_msg[:497] + "..."
-        
+
         # Prepare template variables
         template_vars = {
             'dag_id': dag_id,
@@ -291,21 +291,21 @@ def failure_callback(
             'logo_url': logo_url,
             **kwargs
         }
-        
+
         # Render template
         env = _get_jinja_env()
         template = env.get_template('failure.json.j2')
         card_json = template.render(**template_vars)
         card_body = json.loads(card_json)
-        
+
         # Create thread ID
         thread_id = f"{dag_id}_{execution_date.strftime('%Y%m%d')}"
-        
+
         # Send card
         _send_card(webhook_url, card_body, thread_id)
-        
+
         logging.info(f"Failure Google Chat alert sent for DAG {dag_id}")
-        
+
     except Exception as e:
         logging.error(f"Failed to send Google Chat failure alert: {str(e)}")
 
@@ -313,7 +313,7 @@ def failure_callback(
 def _get_dag_run_summary(context: Dict[str, Any]) -> Dict[str, Any]:
     """
     Extract summary information from a DAG run.
-    
+
     Returns:
         Dict with task statistics and details
     """
@@ -321,10 +321,10 @@ def _get_dag_run_summary(context: Dict[str, Any]) -> Dict[str, Any]:
         dag_run = context.get('dag_run')
         if not dag_run:
             return {}
-        
+
         # Get all task instances for this DAG run
         task_instances = dag_run.get_task_instances()
-        
+
         summary = {
             'total_tasks': len(task_instances),
             'success_count': 0,
@@ -334,7 +334,7 @@ def _get_dag_run_summary(context: Dict[str, Any]) -> Dict[str, Any]:
             'skipped_count': 0,
             'tasks': []
         }
-        
+
         for ti in task_instances:
             task_info = {
                 'task_id': ti.task_id,
@@ -344,12 +344,11 @@ def _get_dag_run_summary(context: Dict[str, Any]) -> Dict[str, Any]:
                 'duration': None,
                 'try_number': ti.try_number,
             }
-            
+
             # Calculate duration
             if ti.start_date and ti.end_date:
-                duration = (ti.end_date - ti.start_date).total_seconds()
                 task_info['duration'] = _format_execution_time(ti.start_date, ti.end_date)
-            
+
             # Count by state
             state_lower = str(ti.state).lower()
             if state_lower == 'success':
@@ -360,7 +359,7 @@ def _get_dag_run_summary(context: Dict[str, Any]) -> Dict[str, Any]:
                 if hasattr(ti, 'log') and callable(ti.log):
                     try:
                         task_info['error'] = 'Check logs for details'
-                    except:
+                    except Exception:
                         pass
             elif state_lower == 'running':
                 summary['running_count'] += 1
@@ -368,11 +367,11 @@ def _get_dag_run_summary(context: Dict[str, Any]) -> Dict[str, Any]:
                 summary['skipped_count'] += 1
             elif state_lower in ['up_for_retry', 'up_for_reschedule']:
                 summary['retry_count'] += 1
-            
+
             summary['tasks'].append(task_info)
-        
+
         return summary
-        
+
     except Exception as e:
         logging.error(f"Error getting DAG run summary: {e}")
         return {}
@@ -386,7 +385,7 @@ def dag_success_callback(
 ) -> None:
     """
     Send DAG-level success Google Chat notification with task summary.
-    
+
     Args:
         context: Airflow DAG context
         connection_name: Name of Airflow connection (optional)
@@ -395,7 +394,7 @@ def dag_success_callback(
     """
     try:
         webhook_url = _get_webhook_url(context, connection_name)
-        
+
         # Extract context data
         dag_id = context['dag'].dag_id
         dag_run = context.get('dag_run')
@@ -405,10 +404,10 @@ def dag_success_callback(
         start_date = dag_run.start_date if dag_run else None
         end_date = dag_run.end_date if dag_run else datetime.now()
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
-        
+
         # Get task summary
         summary = _get_dag_run_summary(context)
-        
+
         # Prepare template variables
         template_vars = {
             'dag_id': dag_id,
@@ -422,21 +421,21 @@ def dag_success_callback(
             'summary': summary,
             **kwargs
         }
-        
+
         # Render template
         env = _get_jinja_env()
         template = env.get_template('dag_success.json.j2')
         card_json = template.render(**template_vars)
         card_body = json.loads(card_json)
-        
+
         # Create thread ID
         thread_id = f"{dag_id}_{execution_date.strftime('%Y%m%d')}"
-        
+
         # Send card
         _send_card(webhook_url, card_body, thread_id)
-        
+
         logging.info(f"DAG-level success Google Chat alert sent for DAG {dag_id}")
-        
+
     except Exception as e:
         logging.error(f"Failed to send DAG-level Google Chat success alert: {str(e)}")
 
@@ -449,7 +448,7 @@ def dag_failure_callback(
 ) -> None:
     """
     Send DAG-level failure Google Chat notification with failed task details.
-    
+
     Args:
         context: Airflow DAG context
         connection_name: Name of Airflow connection (optional)
@@ -458,7 +457,7 @@ def dag_failure_callback(
     """
     try:
         webhook_url = _get_webhook_url(context, connection_name)
-        
+
         # Extract context data
         dag_id = context['dag'].dag_id
         dag_run = context.get('dag_run')
@@ -468,13 +467,13 @@ def dag_failure_callback(
         start_date = dag_run.start_date if dag_run else None
         end_date = dag_run.end_date if dag_run else datetime.now()
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
-        
+
         # Get task summary
         summary = _get_dag_run_summary(context)
-        
+
         # Extract failed tasks with details
         failed_tasks = [t for t in summary.get('tasks', []) if t['state'].lower() == 'failed']
-        
+
         # Prepare template variables
         template_vars = {
             'dag_id': dag_id,
@@ -489,21 +488,21 @@ def dag_failure_callback(
             'failed_tasks': failed_tasks,
             **kwargs
         }
-        
+
         # Render template
         env = _get_jinja_env()
         template = env.get_template('dag_failure.json.j2')
         card_json = template.render(**template_vars)
         card_body = json.loads(card_json)
-        
+
         # Create thread ID
         thread_id = f"{dag_id}_{execution_date.strftime('%Y%m%d')}"
-        
+
         # Send card
         _send_card(webhook_url, card_body, thread_id)
-        
+
         logging.info(f"DAG-level failure Google Chat alert sent for DAG {dag_id}")
-        
+
     except Exception as e:
         logging.error(f"Failed to send DAG-level Google Chat failure alert: {str(e)}")
 
