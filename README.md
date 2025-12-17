@@ -284,8 +284,18 @@ airflow-utils-templates/
 
 See the `dags/examples/` directory for complete working examples:
 
+### Basic Examples
 - **example_dag_success.py**: ETL pipeline with successful execution
 - **example_dag_failure.py**: Pipeline with simulated failures and retries
+
+### New Feature Examples
+- **example_dag_with_logo.py**: Demonstrates custom logo/image in alert templates
+- **example_dag_granular_callbacks.py**: Shows granular control over which events trigger alerts
+- **example_dag_all_features.py**: Comprehensive example combining all new features:
+  - Logo support in alerts
+  - Granular callback control (success/retry/failure)
+  - Custom SMTP and Google Chat connections
+  - Multiple DAGs with different configurations
 
 Run examples:
 ```bash
@@ -293,8 +303,10 @@ Run examples:
 cp dags/examples/*.py $AIRFLOW_HOME/dags/
 
 # Trigger manually
-airflow dags trigger example_etl_success
-airflow dags trigger example_etl_with_retries
+airflow dags trigger example_dag_success
+airflow dags trigger example_dag_with_logo
+airflow dags trigger example_dag_granular_callbacks
+airflow dags trigger example_dag_all_features
 ```
 
 ## Testing
