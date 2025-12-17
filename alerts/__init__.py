@@ -98,19 +98,20 @@ def get_callbacks(
             original_retry = callbacks['on_retry_callback']
             original_failure = callbacks['on_failure_callback']
             
-            callbacks['on_success_callback'] = lambda context: (
-                original_success(context), gchat_success(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
+            # Use default arguments to capture current values
+            callbacks['on_success_callback'] = lambda context, os=original_success, gs=gchat_success, gc=gchat_connection_id, lu=logo_url, ov=overrides: (
+                os(context), gs(context, connection_name=gc, logo_url=lu, **ov)
             )
-            callbacks['on_retry_callback'] = lambda context: (
-                original_retry(context), gchat_retry(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
+            callbacks['on_retry_callback'] = lambda context, ort=original_retry, gr=gchat_retry, gc=gchat_connection_id, lu=logo_url, ov=overrides: (
+                ort(context), gr(context, connection_name=gc, logo_url=lu, **ov)
             )
-            callbacks['on_failure_callback'] = lambda context: (
-                original_failure(context), gchat_failure(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
+            callbacks['on_failure_callback'] = lambda context, of=original_failure, gf=gchat_failure, gc=gchat_connection_id, lu=logo_url, ov=overrides: (
+                of(context), gf(context, connection_name=gc, logo_url=lu, **ov)
             )
         else:
-            callbacks['on_success_callback'] = lambda context: gchat_success(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
-            callbacks['on_retry_callback'] = lambda context: gchat_retry(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
-            callbacks['on_failure_callback'] = lambda context: gchat_failure(context, connection_name=gchat_connection_id, logo_url=logo_url, **overrides)
+            callbacks['on_success_callback'] = lambda context, gs=gchat_success, gc=gchat_connection_id, lu=logo_url, ov=overrides: gs(context, connection_name=gc, logo_url=lu, **ov)
+            callbacks['on_retry_callback'] = lambda context, gr=gchat_retry, gc=gchat_connection_id, lu=logo_url, ov=overrides: gr(context, connection_name=gc, logo_url=lu, **ov)
+            callbacks['on_failure_callback'] = lambda context, gf=gchat_failure, gc=gchat_connection_id, lu=logo_url, ov=overrides: gf(context, connection_name=gc, logo_url=lu, **ov)
     
     return callbacks
 
@@ -225,6 +226,7 @@ def get_granular_callbacks(
                 )
         
         if google_chat_enabled:
+            gchat_cb = None
             if event_type == 'success':
                 from alerts.google_chat import success_callback as gchat_success
                 gchat_cb = lambda context, cb=gchat_success, gc=gchat_connection_id, lu=logo_url, ov=overrides: cb(context, connection_name=gc, logo_url=lu, **ov)
@@ -236,11 +238,12 @@ def get_granular_callbacks(
                 gchat_cb = lambda context, cb=gchat_failure, gc=gchat_connection_id, lu=logo_url, ov=overrides: cb(context, connection_name=gc, logo_url=lu, **ov)
             
             # Chain with email if both are enabled
-            if event_callback:
-                original_callback = event_callback
-                event_callback = lambda context, oc=original_callback, gc=gchat_cb: (oc(context), gc(context))
-            else:
-                event_callback = gchat_cb
+            if gchat_cb:
+                if event_callback:
+                    original_callback = event_callback
+                    event_callback = lambda context, oc=original_callback, gc=gchat_cb: (oc(context), gc(context))
+                else:
+                    event_callback = gchat_cb
         
         return event_callback
     
