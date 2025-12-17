@@ -22,12 +22,12 @@ from alerts import get_callbacks, get_granular_callbacks
 # Example 1: All features combined - logo + custom connections
 callbacks_with_custom_connections = get_callbacks(
     email_enabled=True,
-    google_chat_enabled=False,  # Set to True if you have Google Chat configured
-    email_recipients=['team@example.com'],
+    google_chat_enabled=True,  # Set to True if you have Google Chat configured
+    email_recipients=['abklb27@gmail.com'],
     corporate_name='Data Engineering Team',
     logo_url='https://www.python.org/static/community_logos/python-logo-master-v3-TM.png',
-    smtp_connection_id='custom_smtp',      # Use specific SMTP connection
-    gchat_connection_id='team_gchat',       # Use specific GChat connection
+    smtp_connection_id='smtp_default',      # Use specific SMTP connection
+    gchat_connection_id='google_chat_alert',       # Use specific GChat connection
     success_message='ETL pipeline completed successfully!'
 )
 

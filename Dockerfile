@@ -17,7 +17,8 @@ USER airflow
 
 # Copy Python requirements and install
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install  uv && \
+    uv pip install -r requirements.txt
 
 # Copy the alerts package and templates
 COPY alerts/ /opt/airflow/alerts/
