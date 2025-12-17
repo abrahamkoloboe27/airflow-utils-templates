@@ -367,7 +367,8 @@ def get_granular_callbacks(
     if on_success:
         callbacks['on_success_callback'] = _build_callback('success')
 
-    if on_retry:
+    # Retry callbacks are not supported for DAG-level alerts
+    if on_retry and alert_level != 'dag':
         callbacks['on_retry_callback'] = _build_callback('retry')
 
     if on_failure:
