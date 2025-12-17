@@ -1,0 +1,101 @@
+<div style='font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;'>
+    {% if logo_url %}
+    <div style='text-align: center; margin-bottom: 20px; padding: 20px; background-color: #ffffff; border-radius: 5px; border: 1px solid #e9ecef;'>
+        <img src='{{ logo_url }}' alt='Logo' style='max-width: 200px; max-height: 100px; height: auto;'>
+    </div>
+    {% endif %}
+    <div style='background-color: #4CAF50; padding: 30px 20px; border-radius: 5px 5px 0 0; text-align: center;'>
+        <h2 style='color: white; margin: 0; font-size: 24px; line-height: 1.4;'>
+            ✅ DAG Exécuté avec Succès | DAG Completed Successfully
+        </h2>
+    </div>
+    <div style='background-color: #ffffff; padding: 30px 25px; border-radius: 0 0 5px 5px; border: 1px solid #e9ecef; border-top: none;'>
+        <h3 style='color: #2c3e50; margin: 0 0 15px 0; font-size: 18px;'>Résumé du DAG | DAG Summary</h3>
+        <p style='color: #34495e; line-height: 1.6; margin: 0 0 20px 0;'>
+            <strong>DAG:</strong> {{ dag_id }}<br>
+            <strong>Date d'exécution | Execution Date:</strong> {{ execution_date }}<br>
+            <strong>Début | Start:</strong> {{ start_date }}<br>
+            <strong>Fin | End:</strong> {{ end_date }}<br>
+            <strong>Durée totale | Total Duration:</strong> {{ execution_time }}<br>
+        </p>
+        {% if message %}
+        <p style='color: #34495e; line-height: 1.6; margin: 0 0 20px 0;'>
+            {{ message }}
+        </p>
+        {% endif %}
+        
+        <h3 style='color: #2c3e50; margin: 25px 0 15px 0; font-size: 18px;'>Statistiques des Tâches | Task Statistics</h3>
+        <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;'>
+            <table style='width: 100%; border-collapse: collapse;'>
+                <tr>
+                    <td style='padding: 8px 0; color: #34495e;'><strong>Total des tâches | Total Tasks:</strong></td>
+                    <td style='padding: 8px 0; text-align: right; color: #34495e;'>{{ summary.total_tasks }}</td>
+                </tr>
+                <tr>
+                    <td style='padding: 8px 0; color: #27ae60;'><strong>✓ Succès | Success:</strong></td>
+                    <td style='padding: 8px 0; text-align: right; color: #27ae60;'>{{ summary.success_count }}</td>
+                </tr>
+                {% if summary.failed_count > 0 %}
+                <tr>
+                    <td style='padding: 8px 0; color: #e74c3c;'><strong>✗ Échecs | Failed:</strong></td>
+                    <td style='padding: 8px 0; text-align: right; color: #e74c3c;'>{{ summary.failed_count }}</td>
+                </tr>
+                {% endif %}
+                {% if summary.retry_count > 0 %}
+                <tr>
+                    <td style='padding: 8px 0; color: #f39c12;'><strong>↻ Retentatives | Retries:</strong></td>
+                    <td style='padding: 8px 0; text-align: right; color: #f39c12;'>{{ summary.retry_count }}</td>
+                </tr>
+                {% endif %}
+                {% if summary.skipped_count > 0 %}
+                <tr>
+                    <td style='padding: 8px 0; color: #95a5a6;'><strong>⊘ Ignorées | Skipped:</strong></td>
+                    <td style='padding: 8px 0; text-align: right; color: #95a5a6;'>{{ summary.skipped_count }}</td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+        
+        <h3 style='color: #2c3e50; margin: 25px 0 15px 0; font-size: 18px;'>Détails des Tâches | Task Details</h3>
+        <table style='width: 100%; border-collapse: collapse; border: 1px solid #e9ecef;'>
+            <thead>
+                <tr style='background-color: #f8f9fa;'>
+                    <th style='padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; color: #495057; font-weight: 600;'>Tâche | Task</th>
+                    <th style='padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057; font-weight: 600;'>Statut | Status</th>
+                    <th style='padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057; font-weight: 600;'>Durée | Duration</th>
+                    <th style='padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057; font-weight: 600;'>Essais | Tries</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in summary.tasks %}
+                <tr style='{% if loop.index % 2 == 0 %}background-color: #f8f9fa;{% endif %}'>
+                    <td style='padding: 10px; border-bottom: 1px solid #e9ecef; color: #34495e;'>{{ task.task_id }}</td>
+                    <td style='padding: 10px; border-bottom: 1px solid #e9ecef; text-align: center;'>
+                        {% if task.state.lower() == 'success' %}
+                            <span style='color: #27ae60; font-weight: 600;'>✓ {{ task.state }}</span>
+                        {% elif task.state.lower() == 'failed' %}
+                            <span style='color: #e74c3c; font-weight: 600;'>✗ {{ task.state }}</span>
+                        {% elif task.state.lower() in ['up_for_retry', 'up_for_reschedule'] %}
+                            <span style='color: #f39c12; font-weight: 600;'>↻ {{ task.state }}</span>
+                        {% else %}
+                            <span style='color: #95a5a6;'>{{ task.state }}</span>
+                        {% endif %}
+                    </td>
+                    <td style='padding: 10px; border-bottom: 1px solid #e9ecef; text-align: center; color: #34495e;'>
+                        {{ task.duration if task.duration else 'N/A' }}
+                    </td>
+                    <td style='padding: 10px; border-bottom: 1px solid #e9ecef; text-align: center; color: #34495e;'>
+                        {{ task.try_number }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div style='text-align: center; margin-top: 25px; padding-top: 20px; border-top: 1px solid #e9ecef;'>
+        <p style='color: #7f8c8d; font-size: 12px; line-height: 1.4; margin: 0;'>
+            Ceci est un message automatique. | This is an automated message.<br>
+            © {{ corporate }} - {{ year }}
+        </p>
+    </div>
+</div>

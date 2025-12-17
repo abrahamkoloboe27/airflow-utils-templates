@@ -321,4 +321,216 @@ def failure_callback(
         logging.exception(f"Failed to send failure email: {str(e)}")
 
 
-__all__ = ['success_callback', 'retry_callback', 'failure_callback']
+def _get_dag_run_summary(context: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Extract summary information from a DAG run.
+    
+    Returns:
+        Dict with task statistics and details
+    """
+    try:
+        dag_run = context.get('dag_run')
+        if not dag_run:
+            return {}
+        
+        # Get all task instances for this DAG run
+        task_instances = dag_run.get_task_instances()
+        
+        summary = {
+            'total_tasks': len(task_instances),
+            'success_count': 0,
+            'failed_count': 0,
+            'retry_count': 0,
+            'running_count': 0,
+            'skipped_count': 0,
+            'tasks': []
+        }
+        
+        for ti in task_instances:
+            task_info = {
+                'task_id': ti.task_id,
+                'state': str(ti.state),
+                'start_date': ti.start_date,
+                'end_date': ti.end_date,
+                'duration': None,
+                'try_number': ti.try_number,
+            }
+            
+            # Calculate duration
+            if ti.start_date and ti.end_date:
+                duration = (ti.end_date - ti.start_date).total_seconds()
+                task_info['duration'] = _format_execution_time(ti.start_date, ti.end_date)
+            
+            # Count by state
+            state_lower = str(ti.state).lower()
+            if state_lower == 'success':
+                summary['success_count'] += 1
+            elif state_lower == 'failed':
+                summary['failed_count'] += 1
+                # Get exception info if available
+                task_info['error'] = str(ti.log_url) if hasattr(ti, 'log_url') else 'Error details in logs'
+            elif state_lower == 'running':
+                summary['running_count'] += 1
+            elif state_lower == 'skipped':
+                summary['skipped_count'] += 1
+            elif state_lower in ['up_for_retry', 'up_for_reschedule']:
+                summary['retry_count'] += 1
+            
+            summary['tasks'].append(task_info)
+        
+        return summary
+        
+    except Exception as e:
+        logging.error(f"Error getting DAG run summary: {e}")
+        return {}
+
+
+def dag_success_callback(
+    context: Dict[str, Any],
+    email_recipients: Optional[List[str]] = None,
+    corporate_name: Optional[str] = None,
+    success_message: Optional[str] = None,
+    logo_url: Optional[str] = None,
+    smtp_connection_id: Optional[str] = None,
+    **kwargs
+) -> None:
+    """
+    Send DAG-level success email notification with task summary.
+    
+    Args:
+        context: Airflow DAG context
+        email_recipients: List of email addresses (optional)
+        corporate_name: Corporate name for footer (optional)
+        success_message: Custom success message (optional)
+        logo_url: URL of logo/image to display at top of email (optional)
+        smtp_connection_id: Airflow connection ID for SMTP (optional, defaults to 'smtp_default')
+        **kwargs: Additional template variables
+    """
+    try:
+        from airflow.utils.email import send_email_smtp
+        
+        config = _get_config(context, email_recipients, corporate_name, logo_url)
+        
+        # Extract context data
+        dag_id = context['dag'].dag_id
+        dag_run = context.get('dag_run')
+        execution_date = dag_run.execution_date.strftime('%Y-%m-%d %H:%M:%S') if dag_run else 'N/A'
+        start_date = dag_run.start_date if dag_run else None
+        end_date = dag_run.end_date if dag_run else datetime.now()
+        
+        # Get task summary
+        summary = _get_dag_run_summary(context)
+        
+        # Prepare template variables
+        template_vars = {
+            'dag_id': dag_id,
+            'execution_date': execution_date,
+            'start_date': start_date.strftime('%Y-%m-%d %H:%M:%S') if start_date else 'N/A',
+            'end_date': end_date.strftime('%Y-%m-%d %H:%M:%S') if end_date else 'N/A',
+            'execution_time': _format_execution_time(start_date, end_date) if start_date else 'N/A',
+            'message': success_message or '',
+            'corporate': config['corporate_name'],
+            'logo_url': config.get('logo_url'),
+            'year': datetime.now().year,
+            'summary': summary,
+            **kwargs
+        }
+        
+        # Render template
+        env = _get_jinja_env()
+        template = env.get_template('dag_success.html')
+        html_content = template.render(**template_vars)
+        
+        # Send email with optional custom connection
+        send_kwargs = {
+            'to': config['email_recipients'],
+            'subject': f"{config['corporate_name']} DAG {dag_id} - Exécution Complète Réussie",
+            'html_content': html_content
+        }
+        if smtp_connection_id:
+            send_kwargs['conn_id'] = smtp_connection_id
+        
+        send_email_smtp(**send_kwargs)
+        
+        logging.info(f"DAG-level success email sent for DAG {dag_id}")
+        
+    except Exception as e:
+        logging.exception(f"Failed to send DAG-level success email: {str(e)}")
+
+
+def dag_failure_callback(
+    context: Dict[str, Any],
+    email_recipients: Optional[List[str]] = None,
+    corporate_name: Optional[str] = None,
+    logo_url: Optional[str] = None,
+    smtp_connection_id: Optional[str] = None,
+    **kwargs
+) -> None:
+    """
+    Send DAG-level failure email notification with failed task details.
+    
+    Args:
+        context: Airflow DAG context
+        email_recipients: List of email addresses (optional)
+        corporate_name: Corporate name for footer (optional)
+        logo_url: URL of logo/image to display at top of email (optional)
+        smtp_connection_id: Airflow connection ID for SMTP (optional, defaults to 'smtp_default')
+        **kwargs: Additional template variables
+    """
+    try:
+        from airflow.utils.email import send_email_smtp
+        
+        config = _get_config(context, email_recipients, corporate_name, logo_url)
+        
+        # Extract context data
+        dag_id = context['dag'].dag_id
+        dag_run = context.get('dag_run')
+        execution_date = dag_run.execution_date.strftime('%Y-%m-%d %H:%M:%S') if dag_run else 'N/A'
+        start_date = dag_run.start_date if dag_run else None
+        end_date = dag_run.end_date if dag_run else datetime.now()
+        
+        # Get task summary
+        summary = _get_dag_run_summary(context)
+        
+        # Extract failed tasks with details
+        failed_tasks = [t for t in summary.get('tasks', []) if t['state'].lower() == 'failed']
+        
+        # Prepare template variables
+        template_vars = {
+            'dag_id': dag_id,
+            'execution_date': execution_date,
+            'start_date': start_date.strftime('%Y-%m-%d %H:%M:%S') if start_date else 'N/A',
+            'end_date': end_date.strftime('%Y-%m-%d %H:%M:%S') if end_date else 'N/A',
+            'execution_time': _format_execution_time(start_date, end_date) if start_date else 'N/A',
+            'corporate': config['corporate_name'],
+            'logo_url': config.get('logo_url'),
+            'year': datetime.now().year,
+            'summary': summary,
+            'failed_tasks': failed_tasks,
+            **kwargs
+        }
+        
+        # Render template
+        env = _get_jinja_env()
+        template = env.get_template('dag_failure.html')
+        html_content = template.render(**template_vars)
+        
+        # Send email with optional custom connection
+        send_kwargs = {
+            'to': config['email_recipients'],
+            'subject': f"{config['corporate_name']} DAG {dag_id} - Échec du DAG ⚠️",
+            'html_content': html_content
+        }
+        if smtp_connection_id:
+            send_kwargs['conn_id'] = smtp_connection_id
+        
+        send_email_smtp(**send_kwargs)
+        
+        logging.info(f"DAG-level failure email sent for DAG {dag_id}")
+        
+    except Exception as e:
+        logging.exception(f"Failed to send DAG-level failure email: {str(e)}")
+
+
+__all__ = ['success_callback', 'retry_callback', 'failure_callback', 
+           'dag_success_callback', 'dag_failure_callback']

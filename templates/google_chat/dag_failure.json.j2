@@ -1,0 +1,81 @@
+{
+    "cardsV2": [{
+        "cardId": "{{ dag_id }}_dag_failure_alert",
+        "card": {
+            "header": {
+                "title": "DAG: {{ dag_id }}",
+                "subtitle": "⚠️ Échec du DAG | DAG Failed",
+                "imageUrl": "{% if logo_url %}{{ logo_url }}{% else %}https://img.icons8.com/color/48/high-priority--v1.png{% endif %}"
+            },
+            "sections": [
+                {
+                    "header": "Résumé du DAG | DAG Summary",
+                    "widgets": [
+                        {"textParagraph": {"text": "<b>📅 Date d'exécution:</b> {{ execution_date }}"}},
+                        {"textParagraph": {"text": "<b>🕒 Début | Start:</b> {{ start_date }}"}},
+                        {"textParagraph": {"text": "<b>🕕 Fin | End:</b> {{ end_date }}"}},
+                        {"textParagraph": {"text": "<b>⏱️ Durée totale | Total Duration:</b> {{ execution_time_str }}"}},
+                        {% if dag_description %}
+                        {"textParagraph": {"text": "<b>📝 Description:</b> {{ dag_description }}"}}
+                        {% endif %}
+                    ]
+                },
+                {
+                    "header": "Statistiques des Tâches | Task Statistics",
+                    "widgets": [
+                        {"textParagraph": {"text": "<b>📊 Total des tâches:</b> {{ summary.total_tasks }}"}},
+                        {"textParagraph": {"text": "<b>✅ Succès:</b> <font color='#27ae60'>{{ summary.success_count }}</font>"}},
+                        {"textParagraph": {"text": "<b>❌ Échecs:</b> <font color='#e74c3c'><b>{{ summary.failed_count }}</b></font>"}},
+                        {% if summary.retry_count > 0 %}
+                        {"textParagraph": {"text": "<b>🔄 Retentatives:</b> <font color='#f39c12'>{{ summary.retry_count }}</font>"}},
+                        {% endif %}
+                        {% if summary.skipped_count > 0 %}
+                        {"textParagraph": {"text": "<b>⏭️ Ignorées:</b> {{ summary.skipped_count }}"}}
+                        {% endif %}
+                    ]
+                },
+                {% if failed_tasks %}
+                {
+                    "header": "Tâches Échouées | Failed Tasks",
+                    "widgets": [
+                        {% for task in failed_tasks %}
+                        {
+                            "decoratedText": {
+                                "topLabel": "❌ {{ task.task_id }}",
+                                "text": "Durée: {{ task.duration if task.duration else 'N/A' }} | Essais: {{ task.try_number }}",
+                                "icon": {"materialIcon": {"name": "error"}},
+                                "bottomLabel": "{{ task.state }}"
+                            }
+                        }{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ]
+                },
+                {% endif %}
+                {
+                    "header": "Toutes les Tâches | All Tasks",
+                    "collapsible": true,
+                    "widgets": [
+                        {% for task in summary.tasks %}
+                        {
+                            "decoratedText": {
+                                "topLabel": "{{ task.task_id }}",
+                                "text": "Durée: {{ task.duration if task.duration else 'N/A' }} | Essais: {{ task.try_number }}",
+                                {% if task.state.lower() == 'success' %}
+                                "icon": {"materialIcon": {"name": "check_circle"}},
+                                {% elif task.state.lower() == 'failed' %}
+                                "icon": {"materialIcon": {"name": "error"}},
+                                {% elif task.state.lower() in ['up_for_retry', 'up_for_reschedule'] %}
+                                "icon": {"materialIcon": {"name": "refresh"}},
+                                {% else %}
+                                "icon": {"materialIcon": {"name": "help"}},
+                                {% endif %}
+                                "bottomLabel": "{{ task.state }}"
+                            }
+                        }{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ]
+                }
+            ]
+        }
+    }]
+}
