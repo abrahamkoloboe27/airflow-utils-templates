@@ -166,7 +166,7 @@ def success_callback(
         # Send email with optional custom connection
         send_kwargs = {
             'to': config['email_recipients'],
-            'subject': f"{config['corporate_name']} DAG {dag_id} - Exécution Réussie",
+            'subject': f"DAG {dag_id} - Exécution Réussie",
             'html_content': html_content
         }
         if smtp_connection_id:
@@ -237,7 +237,7 @@ def retry_callback(
         # Send email with optional custom connection
         send_kwargs = {
             'to': config['email_recipients'],
-            'subject': f"{config['corporate_name']} DAG {dag_id} - Retentative {try_number}/{max_tries}",
+            'subject': f"DAG {dag_id} - Retentative {try_number}/{max_tries}",
             'html_content': html_content
         }
         if smtp_connection_id:
@@ -306,7 +306,7 @@ def failure_callback(
         # Send email with optional custom connection
         send_kwargs = {
             'to': config['email_recipients'],
-            'subject': f"{config['corporate_name']} DAG {dag_id} - Échec Critique ⚠️",
+            'subject': f"DAG {dag_id} - Échec Critique ⚠️",
             'html_content': html_content
         }
         if smtp_connection_id:
@@ -443,7 +443,7 @@ def dag_success_callback(
         # Send email with optional custom connection
         send_kwargs = {
             'to': config['email_recipients'],
-            'subject': f"{config['corporate_name']} DAG {dag_id} - Exécution Complète Réussie",
+            'subject': f"DAG {dag_id} - Exécution Complète Réussie",
             'html_content': html_content
         }
         if smtp_connection_id:
@@ -517,7 +517,7 @@ def dag_failure_callback(
         # Send email with optional custom connection
         send_kwargs = {
             'to': config['email_recipients'],
-            'subject': f"{config['corporate_name']} DAG {dag_id} - Échec du DAG ⚠️",
+            'subject': f"DAG {dag_id} - Échec du DAG ⚠️",
             'html_content': html_content
         }
         if smtp_connection_id:

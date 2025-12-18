@@ -20,7 +20,7 @@ from alerts import get_callbacks
 callbacks = get_callbacks(
     email_enabled=True,
     google_chat_enabled=False,  # Set to True if you have Google Chat configured
-    email_recipients=['your-email@example.com'],
+    email_recipients=['abklb27@gmail.com'],
     corporate_name='My Company',
     logo_url='https://www.python.org/static/community_logos/python-logo-master-v3-TM.png',
     success_message='Pipeline completed successfully with custom logo!'
