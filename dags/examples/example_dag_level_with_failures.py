@@ -81,10 +81,11 @@ def critical_task(**context):
 # Only send alerts on failure (not on success) to reduce noise
 from alerts import get_granular_callbacks
 
-callbacks = get_granular_callbacks(
+# IMPORTANT: DAG-level callbacks must be passed to DAG constructor, not default_args!
+dag_callbacks = get_granular_callbacks(
     on_success=True,  # Send success alert with full summary
     on_failure=True,  # Send failure alert with detailed error info
-    on_retry=True,   # Don't send retry alerts (they'll be in final summary)
+    on_retry=False,   # Don't send retry alerts (DAG-level doesn't support retry callbacks)
     email_enabled=True,
     google_chat_enabled=True,
     email_recipients=['abklb27@gmail.com'],
@@ -93,7 +94,8 @@ callbacks = get_granular_callbacks(
     logo_url='https://www.python.org/static/community_logos/python-logo-master-v3-TM.png'
 )
 
-# DAG configuration
+# DAG configuration - DO NOT include DAG-level callbacks in default_args
+# default_args apply to tasks, not the DAG itself
 default_args = {
     'owner': 'ops_team',
     'depends_on_past': False,
@@ -102,7 +104,6 @@ default_args = {
     'email_on_retry': False,
     'retries': 2,
     'retry_delay': timedelta(minutes=1),
-    **callbacks  # Attach DAG-level alert callbacks
 }
 
 with DAG(
@@ -112,6 +113,9 @@ with DAG(
     schedule_interval=None,  # Manual trigger only
     catchup=False,
     tags=['example', 'dag-level', 'alerts', 'failures'],
+    # Attach DAG-level callbacks directly to DAG, not in default_args
+    on_success_callback=dag_callbacks['on_success_callback'],
+    on_failure_callback=dag_callbacks['on_failure_callback'],
 ) as dag:
     
     # Start task
@@ -168,7 +172,7 @@ with DAG(
 
 # Additional example: DAG-level alerts with only failure notifications
 # This configuration only sends an alert if the DAG fails, not on success
-callbacks_failure_only = get_granular_callbacks(
+dag_callbacks_failure_only = get_granular_callbacks(
     on_success=False,  # No alert on success
     on_failure=True,   # Only alert on failure with full details
     email_enabled=True,
@@ -188,12 +192,13 @@ with DAG(
         'email_on_retry': False,
         'retries': 1,
         'retry_delay': timedelta(minutes=1),
-        **callbacks_failure_only
     },
     description='Only alerts on DAG failure - silent on success',
     schedule_interval=None,
     catchup=False,
     tags=['example', 'dag-level', 'alerts', 'critical-only'],
+    # Attach DAG-level callbacks directly to DAG, not in default_args
+    on_failure_callback=dag_callbacks_failure_only['on_failure_callback'],
 ) as dag_critical:
     
     t1 = BashOperator(

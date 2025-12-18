@@ -185,7 +185,8 @@ Send **one summary alert per DAG** instead of individual alerts for each task. D
 from alerts import get_callbacks
 
 # DAG-level alerts: One alert at the end with complete summary
-callbacks = get_callbacks(
+# IMPORTANT: DAG-level callbacks must be passed to DAG constructor, not default_args
+dag_callbacks = get_callbacks(
     email_enabled=True,
     google_chat_enabled=True,
     email_recipients=['team@example.com'],
@@ -193,15 +194,21 @@ callbacks = get_callbacks(
     alert_level='dag'  # KEY: Enables DAG-level alerts
 )
 
-# Use in DAG default_args
+# Default args without callbacks (for DAG-level alerts)
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2024, 1, 1),
     'retries': 2,
-    **callbacks
 }
 
-with DAG('my_etl_pipeline', default_args=default_args, ...) as dag:
+with DAG(
+    'my_etl_pipeline',
+    default_args=default_args,
+    # Attach DAG-level callbacks directly to DAG constructor
+    on_success_callback=dag_callbacks['on_success_callback'],
+    on_failure_callback=dag_callbacks['on_failure_callback'],
+    ...
+) as dag:
     # Multiple tasks...
     task1 >> task2 >> task3 >> task4
     # Only ONE alert sent at the end with summary of all tasks
@@ -213,12 +220,20 @@ with DAG('my_etl_pipeline', default_args=default_args, ...) as dag:
 from alerts import get_granular_callbacks
 
 # Only alert on DAG failure (no success alerts)
-callbacks = get_granular_callbacks(
+dag_callbacks = get_granular_callbacks(
     on_success=False,
     on_failure=True,
     alert_level='dag',  # DAG-level failure alert with all task details
     email_recipients=['critical@example.com']
 )
+
+with DAG(
+    'my_dag',
+    default_args={'owner': 'airflow', ...},
+    on_failure_callback=dag_callbacks['on_failure_callback'],
+    ...
+) as dag:
+    pass
 ```
 
 **Benefits:**

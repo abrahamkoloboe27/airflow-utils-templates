@@ -63,7 +63,8 @@ def validate_data(**context):
 # Configure DAG-level callbacks
 # This will send ONE alert at the end of the DAG execution with a summary
 # of all tasks (success count, failure count, duration, etc.)
-callbacks = get_callbacks(
+# IMPORTANT: DAG-level callbacks must be passed to DAG constructor, not default_args!
+dag_callbacks = get_callbacks(
     email_enabled=True,
     google_chat_enabled=True,
     email_recipients=['abklb27@gmail.com'],
@@ -72,7 +73,7 @@ callbacks = get_callbacks(
     logo_url='https://www.python.org/static/community_logos/python-logo-master-v3-TM.png'
 )
 
-# DAG configuration
+# DAG configuration - DO NOT include callbacks here for DAG-level alerts
 default_args = {
     'owner': 'data_team',
     'depends_on_past': False,
@@ -81,7 +82,6 @@ default_args = {
     'email_on_retry': False,
     'retries': 2,
     'retry_delay': timedelta(minutes=1),
-    **callbacks  # Attach DAG-level alert callbacks
 }
 
 with DAG(
@@ -91,6 +91,9 @@ with DAG(
     schedule_interval=None,  # Manual trigger only
     catchup=False,
     tags=['example', 'dag-level', 'alerts', 'etl'],
+    # Attach DAG-level callbacks directly to DAG, not in default_args
+    on_success_callback=dag_callbacks['on_success_callback'],
+    on_failure_callback=dag_callbacks['on_failure_callback'],
 ) as dag:
     
     # Start task
