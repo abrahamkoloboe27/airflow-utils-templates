@@ -13,6 +13,12 @@
         <p style='color: #34495e; line-height: 1.6; margin: 0 0 20px 0;'>
             <strong>DAG:</strong> {{ dag_id }}<br>
             <strong>Task:</strong> {{ task_id }}<br>
+            {% if owner %}
+            <strong>Owner | Propriétaire:</strong> {{ owner }}<br>
+            {% endif %}
+            {% if tags %}
+            <strong>Tags | Étiquettes:</strong> {{ tags|join(', ') }}<br>
+            {% endif %}
             <strong>Date d'exécution | Execution Date:</strong> {{ execution_date }}<br>
             {% if start_date and end_date %}
             <strong>Temps d'exécution | Execution Time:</strong> {{ execution_time }}<br>
