@@ -164,3 +164,23 @@ def test_template_rendering_failure(mock_context):
         assert 'test_dag' in html_content
         assert 'Test exception message' in html_content
         assert '⚠️' in html_content or 'Échec' in html_content
+
+
+def test_email_callback_includes_owner_and_tags(mock_context):
+    """Test that email callbacks include owner and tags in template."""
+    from alerts.email import success_callback
+    
+    with patch('airflow.utils.email.send_email_smtp') as mock_send_email:
+        success_callback(
+            mock_context,
+            email_recipients=['test@example.com'],
+            corporate_name='Test Corp'
+        )
+        
+        html_content = mock_send_email.call_args[1]['html_content']
+        
+        # Verify owner and tags are in the email content
+        assert 'test_owner' in html_content
+        assert 'test' in html_content
+        assert 'example' in html_content
+        assert 'alerts' in html_content

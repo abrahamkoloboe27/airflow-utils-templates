@@ -12,6 +12,12 @@
                     "header": "Résumé du DAG | DAG Summary",
                     "widgets": [
                         {"textParagraph": {"text": "<b>📅 Date d'exécution:</b> {{ execution_date }}"}},
+                        {% if owner %}
+                        {"textParagraph": {"text": "<b>👤 Owner:</b> {{ owner }}"}},
+                        {% endif %}
+                        {% if tags %}
+                        {"textParagraph": {"text": "<b>🏷️ Tags:</b> {{ tags|join(', ') }}"}},
+                        {% endif %}
                         {"textParagraph": {"text": "<b>🕒 Début | Start:</b> {{ start_date }}"}},
                         {"textParagraph": {"text": "<b>🕕 Fin | End:</b> {{ end_date }}"}},
                         {"textParagraph": {"text": "<b>⏱️ Durée totale | Total Duration:</b> {{ execution_time_str }}"}}{% if dag_description %},

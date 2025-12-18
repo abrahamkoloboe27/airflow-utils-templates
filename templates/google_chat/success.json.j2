@@ -12,6 +12,12 @@
                     {"textParagraph": {"text": "<b>📅 Date d'exécution:</b> {{ execution_date }}"}},
                     {"textParagraph": {"text": "<b>✅ Statut:</b> Succès"}},
                     {"textParagraph": {"text": "<b>🔍 Tâche:</b> {{ task_id }}"}},
+                    {% if owner %}
+                    {"textParagraph": {"text": "<b>👤 Owner:</b> {{ owner }}"}},
+                    {% endif %}
+                    {% if tags %}
+                    {"textParagraph": {"text": "<b>🏷️ Tags:</b> {{ tags|join(', ') }}"}},
+                    {% endif %}
                     {% if dag_description %}
                     {"textParagraph": {"text": "<b>📝 Description:</b> {{ dag_description }}"}},
                     {% endif %}

@@ -8,7 +8,7 @@ from unittest.mock import Mock
 def mock_context():
     """Create a mock Airflow context for testing."""
     context = {
-        'dag': Mock(dag_id='test_dag', description='Test DAG description'),
+        'dag': Mock(dag_id='test_dag', description='Test DAG description', owner='test_owner', tags=['test', 'example', 'alerts']),
         'task': Mock(retries=2),
         'task_instance': Mock(
             task_id='test_task',
