@@ -16,9 +16,7 @@ RUN apt-get update && \
       libxml2-dev \
       build-essential \
       pkg-config \
-      python3-dev \
-      curl \         
-      tzdata && \
+      curl && \
     Rscript -e "install.packages(c('bigrquery', 'dplyr', 'tidyr', 'ggplot2', 'DBI', 'RSQLite', 'googlesheets4', 'googledrive', 'lubridate', 'data.table', 'glue','jsonlite', 'languageserver'), repos='https://cloud.r-project.org')" && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
