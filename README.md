@@ -254,6 +254,55 @@ This allows you to:
 - Route alerts to different Google Chat spaces
 - Support multi-tenant deployments with separate notification channels
 
+### Automatic Owner and Tags Display (NEW!)
+
+The alert system automatically extracts and displays DAG owner(s) and tags in all alert templates - no additional configuration needed!
+
+```python
+from alerts import get_callbacks
+
+# Simply define owner and tags in your DAG
+default_args = {
+    'owner': 'data_engineering',  # Automatically shown in alerts
+    'start_date': datetime(2024, 1, 1),
+    'retries': 2,
+    **get_callbacks(
+        email_recipients=['team@example.com']
+    )
+}
+
+with DAG(
+    'my_pipeline',
+    default_args=default_args,
+    tags=['production', 'etl', 'critical'],  # Automatically shown in alerts
+    ...
+) as dag:
+    # Your tasks here
+    pass
+```
+
+**What you get:**
+- **Owner field**: Displayed in all email and Google Chat alerts
+- **Tags list**: Shown as comma-separated values in alerts
+- **Works everywhere**: Task-level alerts, DAG-level alerts, all callback types
+- **Zero configuration**: Automatically extracted from DAG context
+- **Backward compatible**: Existing DAGs work without any changes
+
+**Example alert content:**
+```
+DAG: my_pipeline
+Task: process_data
+Owner | Propriétaire: data_engineering
+Tags | Étiquettes: production, etl, critical
+Date d'exécution: 2024-01-15 10:30:00
+```
+
+**Benefits:**
+- Quickly identify who owns a failing DAG
+- Filter and categorize alerts by tags
+- Better team coordination and accountability
+- No code changes required for existing DAGs
+
 ## Configuration
 
 ### Priority Order
@@ -354,6 +403,7 @@ See the `dags/examples/` directory for complete working examples:
 - **example_dag_granular_callbacks.py**: Shows granular control over which events trigger alerts
 - **example_dag_level_alerts.py**: DAG-level alerts with complete task summary (NEW!)
 - **example_dag_level_with_failures.py**: DAG-level failure alerts with detailed error reporting (NEW!)
+- **example_dag_owner_tags.py**: Automatic display of DAG owner and tags in alerts (NEW!)
 - **example_dag_all_features.py**: Comprehensive example combining all new features:
   - Logo support in alerts
   - Granular callback control (success/retry/failure)
@@ -371,6 +421,7 @@ airflow dags trigger example_dag_with_logo
 airflow dags trigger example_dag_granular_callbacks
 airflow dags trigger example_dag_level_alerts
 airflow dags trigger example_dag_level_with_failures
+airflow dags trigger example_dag_owner_tags
 airflow dags trigger example_dag_all_features
 ```
 

@@ -117,6 +117,10 @@ def success_callback(
         try_number = context['task_instance'].try_number
         max_tries = context['task'].retries + 1
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
+        
+        # Extract owner and tags
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
+        dag_tags = getattr(context['dag'], 'tags', [])
 
         # Prepare template variables
         template_vars = {
@@ -131,6 +135,8 @@ def success_callback(
             'max_tries': max_tries,
             'dag_description': dag_description,
             'logo_url': logo_url,
+            'owner': dag_owner,
+            'tags': dag_tags,
             **kwargs
         }
 
@@ -182,6 +188,10 @@ def retry_callback(
         max_tries = context['task'].retries + 1
         next_retry_datetime = context.get('next_retry_datetime')
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
+        
+        # Extract owner and tags
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
+        dag_tags = getattr(context['dag'], 'tags', [])
 
         # Handle timezone for current time
         if start_date and hasattr(start_date, 'tzinfo') and start_date.tzinfo:
@@ -211,6 +221,8 @@ def retry_callback(
             'exception_msg': exception_msg,
             'dag_description': dag_description,
             'logo_url': logo_url,
+            'owner': dag_owner,
+            'tags': dag_tags,
             **kwargs
         }
 
@@ -261,6 +273,10 @@ def failure_callback(
         try_number = context['task_instance'].try_number
         max_tries = context['task'].retries + 1
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
+        
+        # Extract owner and tags
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
+        dag_tags = getattr(context['dag'], 'tags', [])
 
         # Handle timezone for current time
         if start_date and hasattr(start_date, 'tzinfo') and start_date.tzinfo:
@@ -289,6 +305,8 @@ def failure_callback(
             'exception_msg': exception_msg,
             'dag_description': dag_description,
             'logo_url': logo_url,
+            'owner': dag_owner,
+            'tags': dag_tags,
             **kwargs
         }
 
@@ -404,6 +422,10 @@ def dag_success_callback(
         start_date = dag_run.start_date if dag_run else None
         end_date = dag_run.end_date if dag_run else datetime.now()
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
+        
+        # Extract owner and tags
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
+        dag_tags = getattr(context['dag'], 'tags', [])
 
         # Get task summary
         summary = _get_dag_run_summary(context)
@@ -418,6 +440,8 @@ def dag_success_callback(
             'execution_time_str': _format_execution_time(start_date, end_date) if start_date else 'N/A',
             'dag_description': dag_description,
             'logo_url': logo_url,
+            'owner': dag_owner,
+            'tags': dag_tags,
             'summary': summary,
             **kwargs
         }
@@ -467,6 +491,10 @@ def dag_failure_callback(
         start_date = dag_run.start_date if dag_run else None
         end_date = dag_run.end_date if dag_run else datetime.now()
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
+        
+        # Extract owner and tags
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
+        dag_tags = getattr(context['dag'], 'tags', [])
 
         # Get task summary
         summary = _get_dag_run_summary(context)
@@ -484,6 +512,8 @@ def dag_failure_callback(
             'execution_time_str': _format_execution_time(start_date, end_date) if start_date else 'N/A',
             'dag_description': dag_description,
             'logo_url': logo_url,
+            'owner': dag_owner,
+            'tags': dag_tags,
             'summary': summary,
             'failed_tasks': failed_tasks,
             **kwargs

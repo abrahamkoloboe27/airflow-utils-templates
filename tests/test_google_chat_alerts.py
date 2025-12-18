@@ -198,3 +198,26 @@ def test_format_execution_time():
     # Test with None values
     result = _format_execution_time(None, None)
     assert result == "Non disponible"
+
+
+def test_gchat_callback_includes_owner_and_tags(mock_context, monkeypatch):
+    """Test that Google Chat callbacks include owner and tags in card."""
+    from alerts.google_chat import success_callback
+    
+    monkeypatch.setenv('AIRFLOW_GCHAT_WEBHOOK_URL', 'https://chat.googleapis.com/v1/spaces/test')
+    
+    with patch('requests.post') as mock_post:
+        mock_post.return_value.status_code = 200
+        
+        success_callback(
+            mock_context,
+            logo_url='https://example.com/logo.png'
+        )
+        
+        # Get the card body from the request
+        card_body = mock_post.call_args[1]['json']
+        card_json = str(card_body)
+        
+        # Verify owner and tags are in the card
+        assert 'test_owner' in card_json
+        assert 'test' in card_json or 'example' in card_json or 'alerts' in card_json

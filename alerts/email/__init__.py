@@ -142,6 +142,10 @@ def success_callback(
         execution_date = context['execution_date'].strftime('%Y-%m-%d %H:%M:%S')
         start_date = context['task_instance'].start_date
         end_date = context['task_instance'].end_date
+        
+        # Extract owner and tags
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
+        dag_tags = getattr(context['dag'], 'tags', [])
 
         # Prepare template variables
         template_vars = {
@@ -155,6 +159,8 @@ def success_callback(
             'corporate': config['corporate_name'],
             'logo_url': config.get('logo_url'),
             'year': datetime.now().year,
+            'owner': dag_owner,
+            'tags': dag_tags,
             **kwargs
         }
 
@@ -213,6 +219,10 @@ def retry_callback(
         try_number = context['task_instance'].try_number
         max_tries = context['task'].retries + 1
         next_retry_datetime = context.get('next_retry_datetime')
+        
+        # Extract owner and tags
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
+        dag_tags = getattr(context['dag'], 'tags', [])
 
         # Prepare template variables
         template_vars = {
@@ -226,6 +236,8 @@ def retry_callback(
             'corporate': config['corporate_name'],
             'logo_url': config.get('logo_url'),
             'year': datetime.now().year,
+            'owner': dag_owner,
+            'tags': dag_tags,
             **kwargs
         }
 
@@ -283,6 +295,10 @@ def failure_callback(
         exception = context.get('exception', 'Unknown error')
         try_number = context['task_instance'].try_number
         max_tries = context['task'].retries + 1
+        
+        # Extract owner and tags
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
+        dag_tags = getattr(context['dag'], 'tags', [])
 
         # Prepare template variables
         template_vars = {
@@ -295,6 +311,8 @@ def failure_callback(
             'corporate': config['corporate_name'],
             'logo_url': config.get('logo_url'),
             'year': datetime.now().year,
+            'owner': dag_owner,
+            'tags': dag_tags,
             **kwargs
         }
 
@@ -416,6 +434,10 @@ def dag_success_callback(
         execution_date = dag_run.execution_date.strftime('%Y-%m-%d %H:%M:%S') if dag_run else 'N/A'
         start_date = dag_run.start_date if dag_run else None
         end_date = dag_run.end_date if dag_run else datetime.now()
+        
+        # Extract owner and tags
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
+        dag_tags = getattr(context['dag'], 'tags', [])
 
         # Get task summary
         summary = _get_dag_run_summary(context)
@@ -431,6 +453,8 @@ def dag_success_callback(
             'corporate': config['corporate_name'],
             'logo_url': config.get('logo_url'),
             'year': datetime.now().year,
+            'owner': dag_owner,
+            'tags': dag_tags,
             'summary': summary,
             **kwargs
         }
@@ -487,6 +511,10 @@ def dag_failure_callback(
         execution_date = dag_run.execution_date.strftime('%Y-%m-%d %H:%M:%S') if dag_run else 'N/A'
         start_date = dag_run.start_date if dag_run else None
         end_date = dag_run.end_date if dag_run else datetime.now()
+        
+        # Extract owner and tags
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
+        dag_tags = getattr(context['dag'], 'tags', [])
 
         # Get task summary
         summary = _get_dag_run_summary(context)
@@ -504,6 +532,8 @@ def dag_failure_callback(
             'corporate': config['corporate_name'],
             'logo_url': config.get('logo_url'),
             'year': datetime.now().year,
+            'owner': dag_owner,
+            'tags': dag_tags,
             'summary': summary,
             'failed_tasks': failed_tasks,
             **kwargs
