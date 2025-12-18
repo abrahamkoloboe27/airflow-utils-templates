@@ -17,7 +17,6 @@ RUN apt-get update && \
       build-essential \
       pkg-config \
       python3-dev \
-      libmariadb-dev-compat \
       curl \         
       tzdata && \
     Rscript -e "install.packages(c('bigrquery', 'dplyr', 'tidyr', 'ggplot2', 'DBI', 'RSQLite', 'googlesheets4', 'googledrive', 'lubridate', 'data.table', 'glue','jsonlite', 'languageserver'), repos='https://cloud.r-project.org')" && \
