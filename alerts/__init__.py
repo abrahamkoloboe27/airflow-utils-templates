@@ -38,9 +38,13 @@ def get_callbacks(
     Returns:
         Dict with keys: on_success_callback, on_retry_callback, on_failure_callback
         
-        IMPORTANT: For alert_level='dag', callbacks must be passed directly to the 
-        DAG constructor, NOT unpacked into default_args. Task-level callbacks (default)
-        can be unpacked into default_args.
+        ⚠️  CRITICAL: For alert_level='dag', callbacks MUST be passed directly to the 
+        DAG constructor, NOT unpacked into default_args!
+        
+        - alert_level='task' (default): Use **get_callbacks() in default_args
+        - alert_level='dag': Pass callbacks directly to DAG constructor parameters
+        
+        Reason: default_args apply to tasks, while DAG callbacks apply to the DAG itself.
 
     Example:
         from alerts import get_callbacks
@@ -230,9 +234,13 @@ def get_granular_callbacks(
     Returns:
         Dict with keys: on_success_callback, on_retry_callback, on_failure_callback
         
-        IMPORTANT: For alert_level='dag', callbacks must be passed directly to the 
-        DAG constructor, NOT unpacked into default_args. Task-level callbacks (default)
-        can be unpacked into default_args.
+        ⚠️  CRITICAL: For alert_level='dag', callbacks MUST be passed directly to the 
+        DAG constructor, NOT unpacked into default_args!
+        
+        - alert_level='task' (default): Use **get_granular_callbacks() in default_args
+        - alert_level='dag': Pass callbacks directly to DAG constructor parameters
+        
+        Reason: default_args apply to tasks, while DAG callbacks apply to the DAG itself.
 
     Example:
         from alerts import get_granular_callbacks

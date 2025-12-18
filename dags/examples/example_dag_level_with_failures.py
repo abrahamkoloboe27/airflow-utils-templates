@@ -85,7 +85,7 @@ from alerts import get_granular_callbacks
 dag_callbacks = get_granular_callbacks(
     on_success=True,  # Send success alert with full summary
     on_failure=True,  # Send failure alert with detailed error info
-    on_retry=False,   # Don't send retry alerts (they'll be in final summary)
+    on_retry=False,   # Don't send retry alerts (DAG-level doesn't support retry callbacks)
     email_enabled=True,
     google_chat_enabled=True,
     email_recipients=['abklb27@gmail.com'],
@@ -94,7 +94,8 @@ dag_callbacks = get_granular_callbacks(
     logo_url='https://www.python.org/static/community_logos/python-logo-master-v3-TM.png'
 )
 
-# DAG configuration - DO NOT include callbacks here for DAG-level alerts
+# DAG configuration - DO NOT include DAG-level callbacks in default_args
+# default_args apply to tasks, not the DAG itself
 default_args = {
     'owner': 'ops_team',
     'depends_on_past': False,
