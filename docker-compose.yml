@@ -10,14 +10,8 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION : "true"
     AIRFLOW__CORE__LOAD_EXAMPLES : "false"
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN : postgresql+psycopg2://airflow:airflow@postgres/airflow
-    # AIRFLOW__SMTP__SMTP_HOST : ""
-    # AIRFLOW__SMTP__SMTP_PORT : 
-    # AIRFLOW__SMTP__SMTP_USER : ""
-    # AIRFLOW__SMTP__SMTP_PASSWORD : ""
-    # AIRFLOW__SMTP__SMTP_STARTTLS : True
-    # AIRFLOW__SMTP__SMTP_SENDER_NAME :
-    # AIRFLOW__SMTP__SMTP_MAIL_FROM : 
-    # AIRFLOW__SMTP__SMTP_SSL : False
+  env_file :
+    - .env
   volumes :
     - ./dags:/opt/airflow/dags
     - ./plugins:/opt/airflow/plugins

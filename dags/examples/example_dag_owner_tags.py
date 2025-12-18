@@ -73,8 +73,9 @@ def validate_data(**context):
 callbacks = get_callbacks(
     email_enabled=True,
     google_chat_enabled=True,
-    email_recipients=['team@example.com'],  # Replace with your email
+    email_recipients=['abklb27@gmail.com'],  # Replace with your email
     corporate_name='Data Engineering Team',
+    gchat_connection_id='google_chat_alert', 
     success_message='Pipeline completed successfully with all validations passed.'
 )
 
