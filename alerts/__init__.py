@@ -37,11 +37,15 @@ def get_callbacks(
 
     Returns:
         Dict with keys: on_success_callback, on_retry_callback, on_failure_callback
+        
+        IMPORTANT: For alert_level='dag', callbacks must be passed directly to the 
+        DAG constructor, NOT unpacked into default_args. Task-level callbacks (default)
+        can be unpacked into default_args.
 
     Example:
         from alerts import get_callbacks
 
-        # Task-level alerts (default)
+        # Task-level alerts (default) - use in default_args
         default_args = {
             'owner': 'airflow',
             'retries': 2,
@@ -51,15 +55,19 @@ def get_callbacks(
             )
         }
 
-        # DAG-level alerts with task summary
-        default_args = {
-            'owner': 'airflow',
-            'retries': 2,
-            **get_callbacks(
-                email_recipients=['team@example.com'],
-                alert_level='dag'  # Only sends one alert per DAG with all task info
-            )
-        }
+        # DAG-level alerts - pass directly to DAG constructor, NOT in default_args
+        dag_callbacks = get_callbacks(
+            email_recipients=['team@example.com'],
+            alert_level='dag'  # Only sends one alert per DAG with all task info
+        )
+        
+        with DAG(
+            'my_dag',
+            default_args={'owner': 'airflow', 'retries': 2},
+            on_success_callback=dag_callbacks['on_success_callback'],
+            on_failure_callback=dag_callbacks['on_failure_callback'],
+        ) as dag:
+            pass
     """
     callbacks = {
         'on_success_callback': None,
@@ -221,6 +229,10 @@ def get_granular_callbacks(
 
     Returns:
         Dict with keys: on_success_callback, on_retry_callback, on_failure_callback
+        
+        IMPORTANT: For alert_level='dag', callbacks must be passed directly to the 
+        DAG constructor, NOT unpacked into default_args. Task-level callbacks (default)
+        can be unpacked into default_args.
 
     Example:
         from alerts import get_granular_callbacks
@@ -249,14 +261,19 @@ def get_granular_callbacks(
         }
 
         # DAG-level alerts with only failure notifications
-        default_args = {
-            'owner': 'airflow',
-            **get_granular_callbacks(
-                on_failure=True,
-                alert_level='dag',
-                email_recipients=['team@example.com']
-            )
-        }
+        # MUST be passed to DAG constructor, not default_args
+        dag_callbacks = get_granular_callbacks(
+            on_failure=True,
+            alert_level='dag',
+            email_recipients=['team@example.com']
+        )
+        
+        with DAG(
+            'my_dag',
+            default_args={'owner': 'airflow'},
+            on_failure_callback=dag_callbacks['on_failure_callback'],
+        ) as dag:
+            pass
     """
     callbacks = {
         'on_success_callback': None,
