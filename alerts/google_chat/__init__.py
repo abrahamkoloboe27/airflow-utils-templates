@@ -119,7 +119,7 @@ def success_callback(
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
         
         # Extract owner and tags
-        dag_owner = getattr(context['dag'], 'owner', None) or context.get('dag_run', {}).owner if hasattr(context.get('dag_run', {}), 'owner') else 'N/A'
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
         dag_tags = getattr(context['dag'], 'tags', [])
 
         # Prepare template variables
@@ -190,7 +190,7 @@ def retry_callback(
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
         
         # Extract owner and tags
-        dag_owner = getattr(context['dag'], 'owner', None) or context.get('dag_run', {}).owner if hasattr(context.get('dag_run', {}), 'owner') else 'N/A'
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
         dag_tags = getattr(context['dag'], 'tags', [])
 
         # Handle timezone for current time
@@ -275,7 +275,7 @@ def failure_callback(
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
         
         # Extract owner and tags
-        dag_owner = getattr(context['dag'], 'owner', None) or context.get('dag_run', {}).owner if hasattr(context.get('dag_run', {}), 'owner') else 'N/A'
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
         dag_tags = getattr(context['dag'], 'tags', [])
 
         # Handle timezone for current time
@@ -424,7 +424,7 @@ def dag_success_callback(
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
         
         # Extract owner and tags
-        dag_owner = getattr(context['dag'], 'owner', None) or (dag_run.owner if dag_run and hasattr(dag_run, 'owner') else 'N/A')
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
         dag_tags = getattr(context['dag'], 'tags', [])
 
         # Get task summary
@@ -493,7 +493,7 @@ def dag_failure_callback(
         dag_description = getattr(context['dag'], 'description', None) or 'Aucune description disponible'
         
         # Extract owner and tags
-        dag_owner = getattr(context['dag'], 'owner', None) or (dag_run.owner if dag_run and hasattr(dag_run, 'owner') else 'N/A')
+        dag_owner = getattr(context['dag'], 'owner', 'N/A')
         dag_tags = getattr(context['dag'], 'tags', [])
 
         # Get task summary

@@ -36,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Failed task details in DAG-level failure alerts with error messages and execution times
 - Example DAGs: `example_dag_level_alerts.py` and `example_dag_level_with_failures.py`
 - Support for DAG-level alerts in both `get_callbacks()` and `get_granular_callbacks()` functions
+- **DAG owner and tags display**: Automatic extraction and display of DAG owner(s) and tags in all alert templates
+- Owner and tags information displayed in all email templates (success, retry, failure, dag_success, dag_failure)
+- Owner and tags information displayed in all Google Chat templates (success, retry, failure, dag_success, dag_failure)
+- Automatic extraction from DAG context without requiring code changes in existing DAGs
 
 ### Changed
 - Updated Dockerfile to properly copy project files and dependencies
