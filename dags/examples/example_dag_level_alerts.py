@@ -67,6 +67,7 @@ def validate_data(**context):
 dag_callbacks = get_callbacks(
     email_enabled=True,
     google_chat_enabled=True,
+    gchat_connection_id='google_chat_alert', 
     email_recipients=['abklb27@gmail.com'],
     corporate_name='TEST',
     alert_level='dag',  # KEY: This enables DAG-level alerts instead of task-level

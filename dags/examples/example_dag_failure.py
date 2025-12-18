@@ -78,6 +78,7 @@ def data_quality_check(**context):
 callbacks = get_callbacks(
     email_enabled=True,
     google_chat_enabled=True,
+    gchat_connection_id='google_chat_alert', 
     email_recipients=['abklb27@gmail.com'],  # Uncomment to override
     corporate_name='My Company'
 )
