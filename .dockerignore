@@ -41,5 +41,5 @@ docker-compose.yml
 .dockerignore
 
 # Other
-.env
+.env*
 .DS_Store
