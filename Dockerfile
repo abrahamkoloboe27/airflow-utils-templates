@@ -19,6 +19,8 @@ RUN apt-get update && \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/home/airflow/.cargo/bin:${PATH}"
 
+USER airflow
+
 # Copy Python requirements and install
 COPY requirements.txt .
 RUN pip install  uv && \
