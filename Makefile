@@ -1,9 +1,25 @@
-up : 
+up:
 	docker compose up -d
-build : 
+
+build:
 	docker compose build
-build-up : build up
-down : 
+
+build-up: build up
+
+down:
 	docker compose down
-down-volumes : 
+
+down-volumes:
 	docker compose down -v
+
+logs:
+	docker compose logs -f
+
+flower-up:
+	docker compose --profile flower up -d
+
+debug:
+	docker compose --profile debug run --rm airflow-cli
+
+ps:
+	docker compose ps
