@@ -12,6 +12,9 @@ down:
 down-volumes:
 	docker compose down -v
 
+init:
+	docker compose up airflow-init
+
 logs:
 	docker compose logs -f
 
