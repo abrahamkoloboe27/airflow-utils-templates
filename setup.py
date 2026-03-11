@@ -11,7 +11,7 @@ setup(
         "": ["templates/**/*.html", "templates/**/*.j2"],
     },
     install_requires=[
-        "apache-airflow>=2.0.0",
+        "apache-airflow>=3.0.0",
         "jinja2>=3.0.0",
         "requests>=2.28.0",
     ],
@@ -22,5 +22,5 @@ setup(
             "pytest-mock>=3.10.0",
         ],
     },
-    python_requires=">=3.7",
+    python_requires=">=3.9",
 )
