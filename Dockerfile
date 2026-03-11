@@ -1,4 +1,4 @@
-FROM apache/airflow:slim-2.11.0-python3.11
+FROM apache/airflow:3.0.0-python3.12
 
 # Install system packages
 USER root

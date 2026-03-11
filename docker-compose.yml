@@ -1,15 +1,13 @@
 x-airflow-common: 
   &airflow-common
   build : ./
-  image: ${AIRFLOW_IMAGE_NAME:-extend_airflow:latest}
+  image: ${AIRFLOW_IMAGE_NAME:-extend_airflow:3}
   environment : &airflow-common-env
     AIRFLOW__CORE__EXECUTOR : LocalExecutor
-    AIRFLOW__CORE__SQL_ALCHEMY_CONN : postgresql+psycopg2://airflow:airflow@postgres/airflow
-    AIRFLOW__CELERY__RESULT_BACKEND : db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN : postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CORE__FERNET_KEY : "Gp6wDeVXdHtILQx2a85JFpfiKWspnGSt99dIWLeXcWA="
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION : "true"
     AIRFLOW__CORE__LOAD_EXAMPLES : "false"
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN : postgresql+psycopg2://airflow:airflow@postgres/airflow
   env_file :
     - .env
   volumes :
@@ -17,7 +15,6 @@ x-airflow-common:
     - ./plugins:/opt/airflow/plugins
     - ./logs:/opt/airflow/logs
     - ./dump:/opt/airflow/dump
-    - ./airflow.cfg:/opt/airflow/airflow.cfg
   user : "${AIRFLOW_UID:-50000}:0"
   depends_on :
     postgres:
@@ -63,7 +60,7 @@ services:
     networks:
       - airflow-network
     
- 
+
   airflow-webserver : 
     << : *airflow-common
     command : webserver
@@ -84,7 +81,7 @@ services:
 
   airflow-init : 
     << : *airflow-common
-    command : airflow db upgrade
+    command : airflow db migrate
     depends_on :
       postgres:
         condition: service_healthy
@@ -103,5 +100,4 @@ volumes:
 networks:
   airflow-network:
     driver: bridge
-
 
